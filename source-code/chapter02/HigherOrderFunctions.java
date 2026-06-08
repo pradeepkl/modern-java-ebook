@@ -1,9 +1,8 @@
 // Java 8+
 /**
  * Listing 2.5 — HigherOrderFunctions.java
- * Demonstrates: Composing and combining Predicate instances using
- *               or(), negate(), and and() for higher-order function patterns.
- * Chapter 2: Writing Code the Modern Java Way
+ * Demonstrates: Composing predicates using higher-order functions (and, negate, or)
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
 package chapter02;
@@ -14,32 +13,34 @@ public class HigherOrderFunctions {
 
     public static void main(String[] args) {
 
-        // Define two base predicates as lambda expressions
-        Predicate<Integer> isMinor  = age -> age < 18;  // under 18
-        Predicate<Integer> isSenior = age -> age > 65;  // over 65
+        // Define individual predicates as reusable behaviors
+        Predicate<Integer> isEven = number -> number % 2 == 0;
+        Predicate<Integer> isPositive = number -> number > 0;
 
-        // Combine predicates using logical OR
-        Predicate<Integer> isMinorOrSenior = isMinor.or(isSenior);
-        System.out.println(isMinorOrSenior.test(16)); // true  — minor
-        System.out.println(isMinorOrSenior.test(30)); // false — neither
+        // Compose predicates: even AND positive — both conditions must hold
+        Predicate<Integer> isEvenAndPositive = isEven.and(isPositive);
 
-        // Negate a predicate: isNotMinor means age >= 18
-        Predicate<Integer> isNotMinor = isMinor.negate();
-        System.out.println(isNotMinor.test(20));      // true  — not a minor
-        System.out.println(isNotMinor.test(15));      // false — is a minor
+        System.out.println(isEvenAndPositive.test(4));   // true: even and positive
+        System.out.println(isEvenAndPositive.test(-4));  // false: even but not positive
+        System.out.println(isEvenAndPositive.test(3));   // false: positive but not even
 
-        // Compose: adult is NOT minor AND NOT senior (18–65 inclusive)
-        Predicate<Integer> isBetween18And65 =
-                isMinor.negate().and(isSenior.negate());
-        System.out.println(isBetween18And65.test(30)); // true  — working age
-        System.out.println(isBetween18And65.test(70)); // false — senior
+        // Negate to get odd numbers — logical complement of isEven
+        Predicate<Integer> isOdd = isEven.negate();
+        System.out.println(isOdd.test(3));   // true: 3 is odd
+        System.out.println(isOdd.test(4));   // false: 4 is even
+
+        // Compose with OR: even OR positive
+        Predicate<Integer> isEvenOrPositive = isEven.or(isPositive);
+        System.out.println(isEvenOrPositive.test(-3));  // false: odd and negative
+        System.out.println(isEvenOrPositive.test(-4));  // true: even (though negative)
 
         // Output:
         // true
         // false
-        // true
         // false
         // true
         // false
+        // false
+        // true
     }
 }
