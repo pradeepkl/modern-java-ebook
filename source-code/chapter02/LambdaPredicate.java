@@ -2,7 +2,7 @@
 /**
  * Listing 2.3 — LambdaPredicate.java
  * Demonstrates: Replacing anonymous class ceremony with lambda expressions
- * Chapter 2: Writing Code the Modern Java Way
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
 package chapter02;
@@ -13,29 +13,26 @@ public class LambdaPredicate {
 
     public static void main(String[] args) {
 
-        // Step 1: remove anonymous class boilerplate — still uses explicit braces/return
+        // Step 1: remove anonymous class ceremony — block lambda with explicit return
         Predicate<Integer> isEven = (number) -> {
-            return number % 2 == 0; // compiler infers Integer param and boolean return
+            return number % 2 == 0; // compiler infers Integer type and boolean return
         };
 
-        // Step 2: single param — parentheses optional; single expression — no braces or return
-        Predicate<Integer> isEvenLambda = number -> number % 2 == 0;
+        // Step 2: parentheses optional for single param; braces and return removed
+        Predicate<Integer> isEvenLambda = number -> number % 2 == 0; // most concise form
 
-        // Demonstrate both predicates produce identical results
-        System.out.println("isEven.test(4):       " + isEven.test(4));       // true
-        System.out.println("isEven.test(7):       " + isEven.test(7));       // false
-        System.out.println("isEvenLambda.test(4): " + isEvenLambda.test(4)); // true
-        System.out.println("isEvenLambda.test(7): " + isEvenLambda.test(7)); // false
+        // Step 3: compose predicates — negate isEven to get isOdd
+        Predicate<Integer> isOdd = isEvenLambda.negate(); // built-in composition method
 
-        // Compose predicates: negate isEvenLambda to get isOdd
-        Predicate<Integer> isOdd = isEvenLambda.negate(); // built-in default method
-        System.out.println("isOdd.test(7):        " + isOdd.test(7));        // true
+        System.out.println("isEven.test(4):      " + isEven.test(4));       // true
+        System.out.println("isEvenLambda.test(7):" + isEvenLambda.test(7)); // false
+        System.out.println("isOdd.test(7):       " + isOdd.test(7));        // true
+        System.out.println("isOdd.test(4):       " + isOdd.test(4));        // false
+
+        // Output:
+        // isEven.test(4):      true
+        // isEvenLambda.test(7):false
+        // isOdd.test(7):       true
+        // isOdd.test(4):       false
     }
-
-    // Output:
-    // isEven.test(4):       true
-    // isEven.test(7):       false
-    // isEvenLambda.test(4): true
-    // isEvenLambda.test(7): false
-    // isOdd.test(7):        true
 }
