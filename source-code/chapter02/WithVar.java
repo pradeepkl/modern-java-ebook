@@ -1,17 +1,18 @@
 // Java 10+
 /**
  * Listing 2.9 — WithVar.java
- * Demonstrates: Local variable type inference using the var keyword
- * Chapter 2: Writing Code the Modern Java Way
+ * Demonstrates: Using var keyword for local type inference
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 10+
  */
 package chapter02;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
 
 public class WithVar {
+
     public static void main(String[] args) {
         // var infers exact same types as explicit declarations — no dynamic typing
         var map = Map.of("A", 1, "B", 2); // inferred as Map<String, Integer>
@@ -24,8 +25,14 @@ public class WithVar {
             var entry = iterator.next(); // inferred as Map.Entry<String, Integer>
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
+
+        // var is still statically typed — calling wrong methods would fail at compile time
+        var greeting = "Hello, var!"; // inferred as String
+        System.out.println(greeting.toUpperCase()); // String methods available
     }
+
     // Output:
     // A: 1
     // B: 2
+    // HELLO, VAR!
 }
