@@ -1,7 +1,7 @@
 // Java 10+
 /**
  * Listing 2.9 — WithVar.java
- * Demonstrates: Using var keyword for local type inference
+ * Demonstrates: Local variable type inference using the var keyword
  * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 10+
  */
@@ -23,16 +23,11 @@ public class WithVar {
 
         while (iterator.hasNext()) {
             var entry = iterator.next(); // inferred as Map.Entry<String, Integer>
+            // Type safety is fully preserved — getKey() and getValue() work as expected
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
-
-        // var is still statically typed — calling wrong methods would fail at compile time
-        var greeting = "Hello, var!"; // inferred as String
-        System.out.println(greeting.toUpperCase()); // String methods available
     }
-
-    // Output:
-    // A: 1
-    // B: 2
-    // HELLO, VAR!
 }
+// Output:
+// A: 1
+// B: 2
