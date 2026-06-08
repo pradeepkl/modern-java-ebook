@@ -1,7 +1,7 @@
-// Java 9+
+// Java 9
 /**
  * Listing 2.8 — WithoutVar.java
- * Demonstrates: Verbose type declarations without var keyword (Java 9 and earlier style)
+ * Demonstrates: Verbose explicit type declarations in Java 9 and earlier
  * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 9+
  */
@@ -17,15 +17,15 @@ public class WithoutVar {
         // All types explicitly repeated even when obvious from context
         Map<String, Integer> map = Map.of("A", 1, "B", 2);
 
-        // Type fully repeated despite being obvious from map.entrySet()
+        // Type must be fully spelled out despite being obvious from map.entrySet()
         Set<Map.Entry<String, Integer>> entries = map.entrySet();
 
-        // Type fully repeated despite being obvious from entries.iterator()
+        // Iterator type is verbose but required without var
         Iterator<Map.Entry<String, Integer>> iterator = entries.iterator();
 
         while (iterator.hasNext()) {
-            // Verbose but explicit — type repeated a third time
-            Map.Entry<String, Integer> entry = iterator.next();
+            // Entry type repeated again — compiler already knows this type
+            Map.Entry<String, Integer> entry = iterator.next(); // verbose but explicit
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
     }
