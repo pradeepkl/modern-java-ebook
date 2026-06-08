@@ -1,7 +1,7 @@
 // Java 8+
 /**
  * Listing 2.7 — MethodReferences.java
- * Demonstrates: Four types of method references in Java
+ * Demonstrates: Four types of method references in Java 8+
  * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
@@ -17,30 +17,33 @@ public class MethodReferences {
 
     public static void main(String[] args) {
 
-        // Static method reference replaces explicit lambda: s -> Integer.parseInt(s)
+        // Static method reference: ClassName::staticMethodName
+        // Equivalent lambda: s -> Integer.parseInt(s)
         Function<String, Integer> parseViaRef = Integer::parseInt;
         System.out.println(parseViaRef.apply("42")); // 42
 
-        // Instance method reference on a specific object: () -> greeting.toUpperCase()
+        // Instance method reference on a specific object: instance::methodName
+        // Equivalent lambda: () -> greeting.toUpperCase()
         String greeting = "Hello, World!";
         Supplier<String> toUpperCase = greeting::toUpperCase;
         System.out.println(toUpperCase.get()); // HELLO, WORLD!
 
-        // Instance method reference on an arbitrary object of a type
-        // Equivalent to the lambda: (a, b) -> a.compareToIgnoreCase(b)
+        // Instance method reference on an arbitrary object of a type: ClassName::instanceMethodName
+        // Equivalent lambda: (a, b) -> a.compareToIgnoreCase(b)
         List<String> names = Arrays.asList("Charlie", "Alice", "Bob");
-        names.sort(String::compareToIgnoreCase);
+        names.sort(String::compareToIgnoreCase); // sorts alphabetically, case-insensitive
         System.out.println(names); // [Alice, Bob, Charlie]
 
-        // Constructor reference to create a new instance: () -> new ArrayList<>()
+        // Constructor reference: ClassName::new
+        // Equivalent lambda: () -> new ArrayList<>()
         Supplier<List<String>> listSupplier = ArrayList::new;
-        List<String> newList = listSupplier.get();
+        List<String> newList = listSupplier.get(); // creates a fresh ArrayList
         newList.add("Java");
         System.out.println(newList); // [Java]
-    }
 
-    // Output: 42
-    //         HELLO, WORLD!
-    //         [Alice, Bob, Charlie]
-    //         [Java]
+        // Output: 42
+        //         HELLO, WORLD!
+        //         [Alice, Bob, Charlie]
+        //         [Java]
+    }
 }
