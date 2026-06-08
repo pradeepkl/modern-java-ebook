@@ -1,8 +1,8 @@
 // Java 8+
 /**
  * Listing 2.2 — AnonymousPredicate.java
- * Demonstrates: Anonymous class implementation of a functional interface (Predicate)
- * Chapter 2: Writing Code the Modern Java Way
+ * Demonstrates: Implementing a functional interface using an anonymous class
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
 package chapter02;
@@ -13,7 +13,7 @@ public class AnonymousPredicate {
 
     public static void main(String[] args) {
 
-        // Anonymous class implementation of Predicate — verbose but explicit
+        // Anonymous class implementation — verbose but explicit
         Predicate<Integer> isEven = new Predicate<Integer>() {
             @Override
             public boolean test(Integer number) {
@@ -21,19 +21,21 @@ public class AnonymousPredicate {
             }
         };
 
-        // Test with an even number
-        System.out.println("Is 4 even? " + isEven.test(4));
+        // Test with an even number — expects true
+        System.out.println(isEven.test(4));
 
-        // Test with an odd number
-        System.out.println("Is 7 even? " + isEven.test(7));
+        // Test with an odd number — expects false
+        System.out.println(isEven.test(7));
 
-        // Demonstrate negation using the default negate() method
-        Predicate<Integer> isOdd = isEven.negate(); // default method on Predicate
-        System.out.println("Is 3 odd?  " + isOdd.test(3));
-
-        // Output:
-        // Is 4 even? true
-        // Is 7 even? false
-        // Is 3 odd?  true
+        // Demonstrate negation using Predicate.negate()
+        Predicate<Integer> isOdd = isEven.negate(); // composed from existing predicate
+        System.out.println(isOdd.test(3));  // true — 3 is odd
+        System.out.println(isOdd.test(8));  // false — 8 is even
     }
+
+    // Output:
+    // true
+    // false
+    // true
+    // false
 }
