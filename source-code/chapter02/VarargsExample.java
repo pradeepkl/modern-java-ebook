@@ -1,47 +1,61 @@
 // Java 5+
 /**
  * Listing 2.10 — VarargsExample.java
- * Demonstrates: Variable-length arguments (varargs) for flexible method signatures
- * Chapter 2: Writing Code the Modern Java Way
+ * Demonstrates: Varargs for flexible argument counts in expressive API design
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 5+
  */
 package chapter02;
 
 public class VarargsExample {
 
-    // Accepts any number of int arguments via varargs (int... becomes int[])
+    /**
+     * Accepts any number of int arguments using varargs syntax.
+     * The compiler treats the parameter as an int[] internally.
+     */
     public static int sum(int... numbers) {
         int total = 0;
-        for (int number : numbers) {
-            total += number; // accumulate each value into running total
+        for (int number : numbers) { // iterate over varargs like an array
+            total += number;
         }
         return total;
     }
 
-    // Varargs also works with objects — accepts zero or more String arguments
-    public static String join(String separator, String... words) {
+    /**
+     * Concatenates any number of String values with a separator.
+     * Demonstrates varargs with non-primitive types.
+     */
+    public static String join(String separator, String... parts) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < words.length; i++) {
-            if (i > 0) sb.append(separator); // add separator between words
-            sb.append(words[i]);
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) {
+                sb.append(separator); // insert separator between elements
+            }
+            sb.append(parts[i]);
         }
         return sb.toString();
     }
 
     public static void main(String[] args) {
-        // Call with different numbers of arguments — no array creation needed
-        System.out.println(sum(1, 2, 3));           // three arguments
-        System.out.println(sum(10, 20, 30, 40));    // four arguments
-        System.out.println(sum());                  // zero arguments — valid
+        // Caller passes any number of ints naturally — no array syntax needed
+        System.out.println(sum(1, 2, 3));         // three arguments
+        System.out.println(sum(10, 20, 30, 40));  // four arguments
+        System.out.println(sum());                 // zero arguments — valid
 
-        // Varargs with String type
+        // Varargs also work with object types
         System.out.println(join(", ", "Alice", "Bob", "Charlie"));
-        System.out.println(join("-", "Java", "5", "Plus"));
+        System.out.println(join("-", "2024", "01", "15"));
 
-        // Output: 6
-        //         100
-        //         0
-        //         Alice, Bob, Charlie
-        //         Java-5-Plus
+        // Explicit array can also be passed to a varargs method
+        int[] explicit = {5, 10, 15};
+        System.out.println(sum(explicit)); // array passed directly
+
+        // Output:
+        // 6
+        // 100
+        // 0
+        // Alice, Bob, Charlie
+        // 2024-01-15
+        // 30
     }
 }
