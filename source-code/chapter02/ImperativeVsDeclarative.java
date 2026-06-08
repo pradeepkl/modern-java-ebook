@@ -2,17 +2,17 @@
 /**
  * Listing 2.1 — ImperativeVsDeclarative.java
  * Demonstrates: Imperative vs declarative style for filtering collections
- * Chapter 2: Writing Code the Modern Java Way
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
 package chapter02;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 public class ImperativeVsDeclarative {
 
-    // Simple record representing a user with email and active status
+    // Compact record representing a user with email and active status
     record User(String email, boolean active) {
         boolean isActive() { return active; }
         String getEmail() { return email; }
@@ -20,29 +20,30 @@ public class ImperativeVsDeclarative {
 
     public static void main(String[] args) {
         var users = List.of(
-            new User("a@x.com", true),
-            new User("b@x.com", false),
-            new User("c@x.com", true)
+            new User("alice@example.com", true),
+            new User("bob@example.com", false),
+            new User("carol@example.com", true)
         );
 
-        // Imperative: mechanics obscure intent — manual loop, mutable list, explicit branch
-        List<String> emailsImp = new ArrayList<>();
-        for (User u : users) {
-            if (u.isActive()) {
-                emailsImp.add(u.getEmail()); // mutate list inside loop
-            }
+        // Imperative: manual iteration with mutable accumulator
+        // Reader must trace the loop to understand the intent
+        List<String> imperativeEmails = new ArrayList<>();
+        for (User user : users) {
+            if (user.isActive()) imperativeEmails.add(user.getEmail()); // mutation
         }
 
-        // Declarative: pipeline expresses intent — filter, transform, collect
-        List<String> emailsDec = users.stream()
-            .filter(User::isActive)   // keep only active users
-            .map(User::getEmail)      // extract email from each
-            .toList();                // collect into immutable list
+        // Declarative: pipeline expresses intent directly
+        // filter → map → collect reads like a description of the goal
+        List<String> declarativeEmails = users.stream()
+                .filter(User::isActive)   // keep only active users
+                .map(User::getEmail)      // extract their emails
+                .toList();               // collect into an immutable list
 
-        System.out.println(emailsImp);
-        System.out.println(emailsDec);
+        System.out.println("Imperative:  " + imperativeEmails);
+        System.out.println("Declarative: " + declarativeEmails);
 
-        // Output: [a@x.com, c@x.com]
-        //         [a@x.com, c@x.com]
+        // Both produce identical results; declarative version reveals intent faster
+        // Output: Imperative:  [alice@example.com, carol@example.com]
+        //         Declarative: [alice@example.com, carol@example.com]
     }
 }
