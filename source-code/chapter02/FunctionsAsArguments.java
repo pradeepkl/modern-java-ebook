@@ -1,8 +1,8 @@
 // Java 8+
 /**
  * Listing 2.4 — FunctionsAsArguments.java
- * Demonstrates: Passing and returning behavior using lambdas and Predicate
- * Chapter 2: Writing Code the Modern Java Way
+ * Demonstrates: Passing and returning lambdas as first-class behavior
+ * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
 package chapter02;
@@ -13,19 +13,12 @@ import java.util.function.Predicate;
 
 public class FunctionsAsArguments {
 
-    // Accepts behavior as an argument via the Predicate functional interface
-    public static List<Integer> filterNumbers(
-            List<Integer> numbers,
-            Predicate<Integer> condition) {
-
+    // Accepts behavior as an argument via functional interface
+    public static List<Integer> filterNumbers(List<Integer> numbers, Predicate<Integer> condition) {
         List<Integer> result = new ArrayList<>();
-
         for (Integer number : numbers) {
-            if (condition.test(number)) { // invoke the passed-in behavior
-                result.add(number);
-            }
+            if (condition.test(number)) result.add(number); // apply the passed-in behavior
         }
-
         return result;
     }
 
@@ -37,22 +30,22 @@ public class FunctionsAsArguments {
     public static void main(String[] args) {
         List<Integer> numbers = List.of(1, 5, 10, 15, 20);
 
-        // Pass a lambda directly as the condition argument
+        // Pass a lambda directly as an argument
         List<Integer> evens = filterNumbers(numbers, n -> n % 2 == 0);
-        System.out.println("Even numbers:        " + evens);
+        System.out.println("Even numbers: " + evens);
 
-        // Use a method that returns a Predicate (behavior factory)
-        Predicate<Integer> greaterThanNine = isGreaterThan(9);
-        List<Integer> bigNumbers = filterNumbers(numbers, greaterThanNine);
-        System.out.println("Greater than 9:      " + bigNumbers);
+        // Pass a method-returned lambda as an argument
+        List<Integer> greaterThanNine = filterNumbers(numbers, isGreaterThan(9));
+        System.out.println("Greater than 9: " + greaterThanNine);
 
         // Compose predicates: greater than 4 AND even
-        List<Integer> evenAndBig = filterNumbers(numbers, isGreaterThan(4).and(n -> n % 2 == 0));
-        System.out.println("Even and > 4:        " + evenAndBig);
+        Predicate<Integer> greaterThanFour = isGreaterThan(4);
+        Predicate<Integer> isEven = n -> n % 2 == 0;
+        List<Integer> evenAndGreaterThanFour = filterNumbers(numbers, greaterThanFour.and(isEven));
+        System.out.println("Even and greater than 4: " + evenAndGreaterThanFour);
 
-        // Output:
-        // Even numbers:        [10, 20]
-        // Greater than 9:      [10, 15, 20]
-        // Even and > 4:        [10, 20]
+        // Output: Even numbers: [10, 20]
+        // Output: Greater than 9: [10, 15, 20]
+        // Output: Even and greater than 4: [10, 20]
     }
 }
