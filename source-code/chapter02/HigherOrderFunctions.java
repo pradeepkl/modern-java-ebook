@@ -1,7 +1,7 @@
 // Java 8+
 /**
  * Listing 2.5 — HigherOrderFunctions.java
- * Demonstrates: Composing predicates using higher-order functions (and, negate, or)
+ * Demonstrates: Composing and negating Predicate instances as higher-order functions
  * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
@@ -13,34 +13,38 @@ public class HigherOrderFunctions {
 
     public static void main(String[] args) {
 
-        // Define individual predicates as reusable behaviors
+        // Assign behavior to variables using lambda expressions
         Predicate<Integer> isEven = number -> number % 2 == 0;
         Predicate<Integer> isPositive = number -> number > 0;
 
-        // Compose predicates: even AND positive — both conditions must hold
+        // Compose predicates: even AND positive (higher-order combination)
         Predicate<Integer> isEvenAndPositive = isEven.and(isPositive);
 
-        System.out.println(isEvenAndPositive.test(4));   // true: even and positive
-        System.out.println(isEvenAndPositive.test(-4));  // false: even but not positive
-        System.out.println(isEvenAndPositive.test(3));   // false: positive but not even
+        // 4 is even and positive → true
+        System.out.println(isEvenAndPositive.test(4));
 
-        // Negate to get odd numbers — logical complement of isEven
+        // -4 is even but not positive → false
+        System.out.println(isEvenAndPositive.test(-4));
+
+        // Negate the isEven predicate to produce an isOdd predicate
         Predicate<Integer> isOdd = isEven.negate();
-        System.out.println(isOdd.test(3));   // true: 3 is odd
-        System.out.println(isOdd.test(4));   // false: 4 is even
 
-        // Compose with OR: even OR positive
+        // 3 is odd → true
+        System.out.println(isOdd.test(3));
+
+        // Demonstrate or() composition: even OR positive
         Predicate<Integer> isEvenOrPositive = isEven.or(isPositive);
-        System.out.println(isEvenOrPositive.test(-3));  // false: odd and negative
-        System.out.println(isEvenOrPositive.test(-4));  // true: even (though negative)
 
-        // Output:
-        // true
-        // false
-        // false
-        // true
-        // false
-        // false
-        // true
+        // -3 is odd and negative → false
+        System.out.println(isEvenOrPositive.test(-3));
+
+        // -2 is even (but negative) → true
+        System.out.println(isEvenOrPositive.test(-2));
+
+        // Output: true
+        //         false
+        //         true
+        //         false
+        //         true
     }
 }
