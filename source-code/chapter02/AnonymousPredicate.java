@@ -21,21 +21,20 @@ public class AnonymousPredicate {
             }
         };
 
-        // Test with an even number — expects true
-        System.out.println(isEven.test(4));
+        // Test with an even number
+        System.out.println("Is 4 even? " + isEven.test(4));
 
-        // Test with an odd number — expects false
-        System.out.println(isEven.test(7));
+        // Test with an odd number
+        System.out.println("Is 7 even? " + isEven.test(7));
 
-        // Demonstrate negation using Predicate.negate()
-        Predicate<Integer> isOdd = isEven.negate(); // composed from existing predicate
-        System.out.println(isOdd.test(3));  // true — 3 is odd
-        System.out.println(isOdd.test(8));  // false — 8 is even
+        // Demonstrate reuse with additional values
+        System.out.println("Is 10 even? " + isEven.test(10));
+        System.out.println("Is 13 even? " + isEven.test(13));
     }
 
     // Output:
-    // true
-    // false
-    // true
-    // false
+    // Is 4 even? true
+    // Is 7 even? false
+    // Is 10 even? true
+    // Is 13 even? false
 }
