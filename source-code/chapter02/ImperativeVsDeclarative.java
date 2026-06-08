@@ -1,7 +1,7 @@
 // Java 8+
 /**
  * Listing 2.1 — ImperativeVsDeclarative.java
- * Demonstrates: Imperative vs declarative style for filtering collections
+ * Demonstrates: Contrasting imperative loop-based filtering with declarative Stream pipelines
  * Chapter 2: Expressing Intent with Modern Java
  * Requires: Java 8+
  */
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class ImperativeVsDeclarative {
 
-    // Compact record representing a user with email and active status
+    // Compact record representing a system user with email and active status
     record User(String email, boolean active) {
         boolean isActive() { return active; }
         String getEmail() { return email; }
@@ -25,25 +25,30 @@ public class ImperativeVsDeclarative {
             new User("carol@example.com", true)
         );
 
-        // Imperative: manual iteration with mutable accumulator
-        // Reader must trace the loop to understand the intent
+        // Imperative: manual iteration with mutable accumulator — intent is buried in mechanics
         List<String> imperativeEmails = new ArrayList<>();
         for (User user : users) {
-            if (user.isActive()) imperativeEmails.add(user.getEmail()); // mutation
+            if (user.isActive()) {
+                imperativeEmails.add(user.getEmail()); // mutation hidden inside loop body
+            }
         }
 
-        // Declarative: pipeline expresses intent directly
-        // filter → map → collect reads like a description of the goal
+        // Declarative: pipeline expresses intent directly — filter, then map, then collect
         List<String> declarativeEmails = users.stream()
                 .filter(User::isActive)   // keep only active users
-                .map(User::getEmail)      // extract their emails
-                .toList();               // collect into an immutable list
+                .map(User::getEmail)      // extract email addresses
+                .toList();                // collect into an unmodifiable list (Java 16+)
 
-        System.out.println("Imperative:  " + imperativeEmails);
-        System.out.println("Declarative: " + declarativeEmails);
+        System.out.println("Imperative  : " + imperativeEmails);
+        System.out.println("Declarative : " + declarativeEmails);
 
-        // Both produce identical results; declarative version reveals intent faster
-        // Output: Imperative:  [alice@example.com, carol@example.com]
-        //         Declarative: [alice@example.com, carol@example.com]
+        // Both approaches produce identical results; declarative reads closer to the domain
+        boolean equivalent = imperativeEmails.equals(declarativeEmails);
+        System.out.println("Results match: " + equivalent);
+
+        // Output:
+        // Imperative  : [alice@example.com, carol@example.com]
+        // Declarative : [alice@example.com, carol@example.com]
+        // Results match: true
     }
 }
