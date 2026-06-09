@@ -30,7 +30,7 @@ public class CatchingTooBroadly {
         if (order.item() == null || order.item().isBlank()) {
             throw new Exception("Item description is missing");
         }
-        System.out.println("Order processed: " + order);
+        logger.log(Level.INFO, "Order processed: {0}", order);
     }
 
     public static void main(String[] args) {
@@ -51,7 +51,7 @@ public class CatchingTooBroadly {
             }
         }
 
-        System.out.println("--- Better: catch specific types ---");
+        logger.log(Level.INFO, "--- Better: catch specific types ---");
 
         for (Order order : orders) {
             try {
@@ -66,10 +66,11 @@ public class CatchingTooBroadly {
         }
 
         // Output:
-        // Order processed: Order[id=1, item=Widget]
+        // INFO: Order processed: Order[id=1, item=Widget]
         // SEVERE: Something went wrong (IllegalStateException: Order ID is invalid: -1)
         // SEVERE: Something went wrong (IllegalArgumentException: Order must not be null)
-        // Order processed: Order[id=1, item=Widget]
+        // INFO: --- Better: catch specific types ---
+        // INFO: Order processed: Order[id=1, item=Widget]
         // WARNING: Bad input: Order must not be null
         // WARNING: Invalid state: Order ID is invalid: -1
     }
