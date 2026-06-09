@@ -27,7 +27,7 @@ public class LogAndRethrow {
         if (userId <= 0) {
             throw new UserNotFoundException("No user found with ID: " + userId);
         }
-        System.out.println("User " + userId + " loaded successfully.");
+        logger.log(Level.INFO, "User {0} loaded successfully.", userId);
     }
 
     // Smell: logs the exception AND rethrows it — caller will log it again
@@ -46,7 +46,7 @@ public class LogAndRethrow {
         try {
             fetchUser(42);
         } catch (UserNotFoundException e) {
-            System.out.println("Caught: " + e.getMessage());
+            logger.log(Level.WARNING, "Caught: {0}", e.getMessage());
         }
 
         // Demonstrate log-and-rethrow smell with invalid ID
@@ -54,12 +54,12 @@ public class LogAndRethrow {
             fetchUser(-1); // triggers UserNotFoundException
         } catch (UserNotFoundException e) {
             // Caller also handles — exception was already logged inside fetchUser
-            System.out.println("Caught after rethrow: " + e.getMessage());
+            logger.log(Level.WARNING, "Caught after rethrow: {0}", e.getMessage());
         }
 
         // Output:
-        // User 42 loaded successfully.
+        // INFO: User 42 loaded successfully.
         // SEVERE: User not found (logged inside fetchUser)
-        // Caught after rethrow: No user found with ID: -1
+        // WARNING: Caught after rethrow: No user found with ID: -1
     }
 }
