@@ -7,7 +7,13 @@
  */
 package chapter04;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class PatternMatchingExceptions {
+
+    private static final Logger logger =
+            Logger.getLogger(PatternMatchingExceptions.class.getName());
 
     // Sealed exception hierarchy — closed set of permitted subclasses
     sealed static class PaymentException extends RuntimeException
@@ -35,15 +41,15 @@ public class PatternMatchingExceptions {
     }
 
     static void handleLowBalance(InsufficientFundsException ex) {
-        System.out.println("Low balance: " + ex.getMessage());
+        logger.log(Level.WARNING, "Low balance: {0}", ex.getMessage());
     }
 
     static void handleInvalidCard(InvalidCardException ex) {
-        System.out.println("Invalid card: " + ex.getMessage());
+        logger.log(Level.WARNING, "Invalid card: {0}", ex.getMessage());
     }
 
     static void handleGatewayFailure(PaymentGatewayException ex) {
-        System.out.println("Gateway failure: " + ex.getMessage());
+        logger.log(Level.SEVERE, "Gateway failure: {0}", ex.getMessage());
     }
 
     public static void main(String[] args) {
@@ -69,8 +75,8 @@ public class PatternMatchingExceptions {
             }
         }
         // Output:
-        // Low balance: Account balance too low
-        // Invalid card: Card number failed Luhn check
-        // Gateway failure: Stripe API timed out
+        // WARNING: Low balance: Account balance too low
+        // WARNING: Invalid card: Card number failed Luhn check
+        // SEVERE: Gateway failure: Stripe API timed out
     }
 }
