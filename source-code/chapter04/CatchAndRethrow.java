@@ -55,19 +55,19 @@ public class CatchAndRethrow {
         for (int scenario = 1; scenario <= 3; scenario++) {
             try {
                 processData(scenario);
-                System.out.println("Scenario " + scenario + ": completed successfully");
+                logger.log(Level.INFO, "Scenario {0}: completed successfully", scenario);
             } catch (DomainException e) {
                 // Caller sees domain-level message; root cause still accessible
-                System.out.println("Caught DomainException: " + e.getMessage());
-                System.out.println("  Caused by: " + e.getCause().getMessage());
+                logger.log(Level.WARNING, "Caught DomainException: {0}", e.getMessage());
+                logger.log(Level.WARNING, "  Caused by: {0}", e.getCause().getMessage());
             }
         }
         // Output:
-        // Caught DomainException: Contextual message: data integrity issue
-        //   Caused by: DB constraint violated
+        // WARNING: Caught DomainException: Contextual message: data integrity issue
+        // WARNING:   Caused by: DB constraint violated
         // SEVERE: An error occurred while processing
-        // Caught DomainException: Processing failed: operation timed out
-        //   Caused by: Timeout during processing
-        // Scenario 3: completed successfully
+        // WARNING: Caught DomainException: Processing failed: operation timed out
+        // WARNING:   Caused by: Timeout during processing
+        // INFO: Scenario 3: completed successfully
     }
 }
