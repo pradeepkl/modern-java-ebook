@@ -8,8 +8,13 @@
 package chapter04;
 
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ExceptionTranslation {
+
+    private static final Logger logger =
+            Logger.getLogger(ExceptionTranslation.class.getName());
 
     // Custom domain exception that wraps lower-level causes
     static class DataAccessException extends RuntimeException {
@@ -53,19 +58,19 @@ public class ExceptionTranslation {
 
         // Successful lookup — no exception expected
         User user = service.findUser(42L);
-        System.out.println("Found: " + user);
+        logger.log(Level.INFO, "Found: {0}", user);
 
         // Failed lookup — SQLException translated to DataAccessException
         try {
             service.findUser(-1L);
         } catch (DataAccessException e) {
-            System.out.println("Caught domain exception: " + e.getMessage());
-            System.out.println("Root cause: " + e.getCause().getMessage());
+            logger.log(Level.WARNING, "Caught domain exception: {0}", e.getMessage());
+            logger.log(Level.WARNING, "Root cause: {0}", e.getCause().getMessage());
         }
 
         // Output:
-        // Found: User{id=42}
-        // Caught domain exception: Failed to load user
-        // Root cause: No record found for id: -1
+        // INFO: Found: User{id=42}
+        // WARNING: Caught domain exception: Failed to load user
+        // WARNING: Root cause: No record found for id: -1
     }
 }
