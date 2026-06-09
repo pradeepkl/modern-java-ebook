@@ -8,8 +8,13 @@
 package chapter04;
 
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LosingOriginalCause {
+
+    private static final Logger logger =
+            Logger.getLogger(LosingOriginalCause.class.getName());
 
     // Custom exception for data access failures
     static class DataAccessException extends RuntimeException {
@@ -49,30 +54,29 @@ public class LosingOriginalCause {
 
     public static void main(String[] args) {
         // Demonstrate losing the cause
-        System.out.println("=== Without cause (BAD) ===");
+        logger.log(Level.INFO, "=== Without cause (BAD) ===");
         try {
             saveWithoutCause("UserEntity");
         } catch (DataAccessException e) {
-            System.out.println("Caught: " + e.getMessage());
-            System.out.println("Cause: " + e.getCause()); // null — root cause lost
+            logger.log(Level.WARNING, "Caught: {0}", e.getMessage());
+            logger.log(Level.WARNING, "Cause: {0}", e.getCause()); // null — root cause lost
         }
 
         // Demonstrate preserving the cause
-        System.out.println("\n=== With cause (GOOD) ===");
+        logger.log(Level.INFO, "=== With cause (GOOD) ===");
         try {
             saveWithCause("UserEntity");
         } catch (DataAccessException e) {
-            System.out.println("Caught: " + e.getMessage());
-            System.out.println("Cause: " + e.getCause()); // original SQLException visible
+            logger.log(Level.WARNING, "Caught: {0}", e.getMessage());
+            logger.log(Level.WARNING, "Cause: {0}", e.getCause()); // original SQLException visible
         }
 
         // Output:
-        // === Without cause (BAD) ===
-        // Caught: Save failed
-        // Cause: null
-        //
-        // === With cause (GOOD) ===
-        // Caught: Save failed
-        // Cause: java.sql.SQLException: Duplicate key violation for: UserEntity
+        // INFO: === Without cause (BAD) ===
+        // WARNING: Caught: Save failed
+        // WARNING: Cause: null
+        // INFO: === With cause (GOOD) ===
+        // WARNING: Caught: Save failed
+        // WARNING: Cause: java.sql.SQLException: Duplicate key violation for: UserEntity
     }
 }
