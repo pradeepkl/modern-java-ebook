@@ -39,16 +39,17 @@ public class PatternMatchingForLogging {
     static void logException(Exception exception) {
         switch (exception) {
             case AppException.ValidationException e ->
-                    logger.warning(e.getMessage());           // WARNING for validation
+                    logger.log(Level.WARNING, e.getMessage());  // WARNING for validation
             case AppException.DatabaseException e ->
-                    logger.severe(e.getMessage());            // SEVERE for DB errors
+                    logger.log(Level.SEVERE, e.getMessage());   // SEVERE for DB errors
             case AppException.PaymentGatewayException e ->
                     logger.log(
                         Level.SEVERE,
                         () -> "Gateway failure: " + e.getMessage() // lazy supplier
                     );
             default ->
-                    logger.info(
+                    logger.log(
+                        Level.INFO,
                         "Unclassified exception: "
                         + exception.getClass().getSimpleName()     // fallback case
                     );
