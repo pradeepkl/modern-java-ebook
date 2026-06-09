@@ -10,10 +10,13 @@ package chapter04;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CheckedVsUnchecked {
+
+    private static final Logger logger =
+            Logger.getLogger(CheckedVsUnchecked.class.getName());
 
     // Checked — recoverable external condition
     // Caller can retry, use a fallback, or report the failure
@@ -39,26 +42,26 @@ public class CheckedVsUnchecked {
         // Demonstrate checked exception — caller must handle or propagate
         try {
             String content = demo.readFile("nonexistent.txt");
-            System.out.println("File content: " + content);
+            logger.log(Level.INFO, "File content: {0}", content);
         } catch (IOException e) {
             // Meaningful recovery: log and use a fallback value
-            System.out.println("File unavailable, using fallback: " + e.getMessage());
+            logger.log(Level.WARNING, "File unavailable, using fallback: {0}", e.getMessage());
         }
 
         // Demonstrate unchecked exception — valid input succeeds
         String user = demo.fetchUser(42L);
-        System.out.println("Fetched: " + user); // Fetched: User-42
+        logger.log(Level.INFO, "Fetched: {0}", user); // Fetched: User-42
 
         // Demonstrate unchecked exception — null input reveals a programming error
         try {
             demo.fetchUser(null);
         } catch (IllegalArgumentException e) {
-            System.out.println("Programming error caught: " + e.getMessage());
+            logger.log(Level.WARNING, "Programming error caught: {0}", e.getMessage());
         }
 
         // Output:
-        // File unavailable, using fallback: nonexistent.txt (No such file or directory)
-        // Fetched: User-42
-        // Programming error caught: User ID cannot be null
+        // WARNING: File unavailable, using fallback: nonexistent.txt (No such file or directory)
+        // INFO: Fetched: User-42
+        // WARNING: Programming error caught: User ID cannot be null
     }
 }
