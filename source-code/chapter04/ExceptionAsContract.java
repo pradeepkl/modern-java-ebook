@@ -9,6 +9,8 @@ package chapter04;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** Represents a simple user domain object. */
 class User {
@@ -55,27 +57,30 @@ class UserRepository {
 
 public class ExceptionAsContract {
 
+    private static final Logger logger =
+            Logger.getLogger(ExceptionAsContract.class.getName());
+
     public static void main(String[] args) {
         UserRepository repo = new UserRepository();
 
         // Attempt to load a user that exists
         try {
             User found = repo.loadUserById(1L);
-            System.out.println("Found: " + found);
+            logger.log(Level.INFO, "Found: {0}", found);
         } catch (UserNotFoundException e) {
-            System.out.println("Error: " + e.getMessage());
+            logger.log(Level.WARNING, "Error: {0}", e.getMessage());
         }
 
         // Attempt to load a user that does NOT exist
         try {
             User missing = repo.loadUserById(99L);
-            System.out.println("Found: " + missing);
+            logger.log(Level.INFO, "Found: {0}", missing);
         } catch (UserNotFoundException e) {
-            System.out.println("Error: " + e.getMessage()); // contract fulfilled
+            logger.log(Level.WARNING, "Error: {0}", e.getMessage()); // contract fulfilled
         }
 
         // Output:
-        // Found: User{id=1, name='Alice'}
-        // Error: No user found with ID: 99
+        // INFO: Found: User{id=1, name='Alice'}
+        // WARNING: Error: No user found with ID: 99
     }
 }
