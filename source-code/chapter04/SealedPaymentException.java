@@ -7,6 +7,9 @@
  */
 package chapter04;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 // Sealed base exception — only the listed subclasses are permitted
 sealed class PaymentException extends RuntimeException
         permits InsufficientFundsException,
@@ -38,6 +41,9 @@ final class PaymentGatewayException extends PaymentException {
 
 public class SealedPaymentException {
 
+    private static final Logger logger =
+            Logger.getLogger(SealedPaymentException.class.getName());
+
     // Pattern matching switch — exhaustive over sealed type via guarded patterns
     static String describe(PaymentException ex) {
         return switch (ex) {
@@ -60,12 +66,12 @@ public class SealedPaymentException {
         };
 
         for (PaymentException ex : failures) {
-            System.out.println(describe(ex)); // Each subtype handled explicitly
+            logger.log(Level.INFO, describe(ex)); // Each subtype handled explicitly
         }
 
         // Output:
-        // Insufficient funds: Balance too low
-        // Invalid card: Card number invalid
-        // Gateway error: Timeout connecting to gateway
+        // INFO: Insufficient funds: Balance too low
+        // INFO: Invalid card: Card number invalid
+        // INFO: Gateway error: Timeout connecting to gateway
     }
 }
