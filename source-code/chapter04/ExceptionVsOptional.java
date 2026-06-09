@@ -10,8 +10,13 @@ package chapter04;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ExceptionVsOptional {
+
+    private static final Logger logger =
+            Logger.getLogger(ExceptionVsOptional.class.getName());
 
     // Simple User record to represent a domain object
     record User(Long id, String name) {}
@@ -48,25 +53,25 @@ public class ExceptionVsOptional {
         // Exception-based: caller must handle the checked exception explicitly
         try {
             User user = loadUserById(1L);
-            System.out.println("Loaded: " + user.name()); // found
+            logger.log(Level.INFO, "Loaded: {0}", user.name()); // found
             loadUserById(99L);                             // triggers exception
         } catch (UserNotFoundException e) {
-            System.out.println("Exception caught: " + e.getMessage());
+            logger.log(Level.WARNING, "Exception caught: {0}", e.getMessage());
         }
 
         // Optional-based: absence is expressed as a value, not a signal
         findUserById(2L)
-            .ifPresent(u -> System.out.println("Found: " + u.name())); // found
+            .ifPresent(u -> logger.log(Level.INFO, "Found: {0}", u.name())); // found
 
         String result = findUserById(99L)
             .map(User::name)
             .orElse("No user found");                     // absence handled fluently
-        System.out.println(result);
+        logger.log(Level.INFO, "{0}", result);
 
         // Output:
-        // Loaded: Alice
-        // Exception caught: User not found with id: 99
-        // Found: Bob
-        // No user found
+        // INFO: Loaded: Alice
+        // WARNING: Exception caught: User not found with id: 99
+        // INFO: Found: Bob
+        // INFO: No user found
     }
 }
