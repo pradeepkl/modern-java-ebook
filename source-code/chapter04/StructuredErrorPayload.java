@@ -7,6 +7,9 @@
  */
 package chapter04;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Record carries the structured error context — immutable, compact, no boilerplate.
  */
@@ -36,6 +39,9 @@ final class UserNotFoundException extends RuntimeException {
 
 public class StructuredErrorPayload {
 
+    private static final Logger logger =
+            Logger.getLogger(StructuredErrorPayload.class.getName());
+
     /**
      * Simulates a service method that throws a richly structured exception.
      */
@@ -54,15 +60,15 @@ public class StructuredErrorPayload {
             findUser(12345L, "order-service"); // trigger the structured exception
         } catch (UserNotFoundException e) {
             UserNotFoundDetails d = e.details(); // extract the record payload
-            System.out.println("Exception message : " + e.getMessage());
-            System.out.println("User ID           : " + d.userId());
-            System.out.println("Reason            : " + d.reason());
-            System.out.println("Requested by      : " + d.requestedBy());
+            logger.log(Level.WARNING, "Exception message : {0}", e.getMessage());
+            logger.log(Level.INFO, "User ID           : {0}", d.userId());
+            logger.log(Level.INFO, "Reason            : {0}", d.reason());
+            logger.log(Level.INFO, "Requested by      : {0}", d.requestedBy());
         }
         // Output:
-        // Exception message : User 12345 not found: User does not exist
-        // User ID           : 12345
-        // Reason            : User does not exist
-        // Requested by      : order-service
+        // WARNING: Exception message : User 12345 not found: User does not exist
+        // INFO: User ID           : 12345
+        // INFO: Reason            : User does not exist
+        // INFO: Requested by      : order-service
     }
 }
