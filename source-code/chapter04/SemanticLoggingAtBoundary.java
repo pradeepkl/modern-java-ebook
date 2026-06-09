@@ -56,13 +56,13 @@ public class SemanticLoggingAtBoundary {
             boundary.processPayment(paymentId); // triggers exception path
         } catch (PaymentFailedException e) {
             // Presentation layer sees only the domain exception
-            System.out.println("Caught domain exception: " + e.getMessage());
-            System.out.println("Root cause: " + e.getCause().getMessage());
+            logger.log(Level.WARNING, "Caught domain exception: {0}", e.getMessage());
+            logger.log(Level.WARNING, "Root cause: {0}", e.getCause().getMessage());
         }
 
         // Output:
         // SEVERE: Failed to process payment: PAY-20240101-9988
-        // Caught domain exception: Payment processing failed
-        // Root cause: Connection timeout for payment: PAY-20240101-9988
+        // WARNING: Caught domain exception: Payment processing failed
+        // WARNING: Root cause: Connection timeout for payment: PAY-20240101-9988
     }
 }
