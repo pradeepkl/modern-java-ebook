@@ -13,8 +13,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ManualResourceManagement {
+
+    private static final Logger logger =
+            Logger.getLogger(ManualResourceManagement.class.getName());
 
     // Creates a temporary file with sample content for demonstration
     private static String createSampleFile() throws IOException {
@@ -32,7 +37,7 @@ public class ManualResourceManagement {
         try {
             filePath = createSampleFile(); // prepare sample file
         } catch (IOException e) {
-            System.err.println("Could not create sample file: " + e.getMessage());
+            logger.log(Level.SEVERE, "Could not create sample file: {0}", e.getMessage());
             return;
         }
 
@@ -43,10 +48,10 @@ public class ManualResourceManagement {
                     new FileReader(filePath));   // open resource manually
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);        // process each line
+                logger.log(Level.INFO, line);        // process each line
             }
         } catch (IOException e) {
-            e.printStackTrace();                 // handle read errors
+            logger.log(Level.SEVERE, "Failed to read file", e); // handle read errors
         } finally {
             if (reader != null) {                // null check required
                 try {
@@ -57,11 +62,11 @@ public class ManualResourceManagement {
             }
         }
 
-        System.out.println("Resource closed manually in finally block.");
+        logger.log(Level.INFO, "Resource closed manually in finally block.");
         // Output:
-        // Hello, World!
-        // Manual resource management
-        // Java 6 style
-        // Resource closed manually in finally block.
+        // INFO: Hello, World!
+        // INFO: Manual resource management
+        // INFO: Java 6 style
+        // INFO: Resource closed manually in finally block.
     }
 }
