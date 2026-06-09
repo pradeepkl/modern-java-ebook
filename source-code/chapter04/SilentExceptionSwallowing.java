@@ -59,25 +59,25 @@ public class SilentExceptionSwallowing {
     public static void main(String[] args) {
         // Demonstrate the silent swallow — no output, failure hidden
         badPaymentHandling();
-        System.out.println("After bad handling: no indication of failure");
+        logger.log(Level.INFO, "After bad handling: no indication of failure");
 
         // Demonstrate logging approach
         loggedPaymentHandling();
-        System.out.println("After logged handling: failure was recorded");
+        logger.log(Level.INFO, "After logged handling: failure was recorded");
 
         // Demonstrate translation approach
         try {
             translatedPaymentHandling();
         } catch (PaymentException e) {
-            System.out.println("Caught domain exception: " + e.getMessage());
-            System.out.println("Caused by: " + e.getCause().getMessage());
+            logger.log(Level.WARNING, "Caught domain exception: {0}", e.getMessage());
+            logger.log(Level.WARNING, "Caused by: {0}", e.getCause().getMessage());
         }
 
         // Output:
-        // After bad handling: no indication of failure
+        // INFO: After bad handling: no indication of failure
         // WARNING: Payment processing failed (logged to console)
-        // After logged handling: failure was recorded
-        // Caught domain exception: Unable to process payment
-        // Caused by: Payment gateway timeout
+        // INFO: After logged handling: failure was recorded
+        // WARNING: Caught domain exception: Unable to process payment
+        // WARNING: Caused by: Payment gateway timeout
     }
 }
