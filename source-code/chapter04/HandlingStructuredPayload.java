@@ -7,6 +7,7 @@
  */
 package chapter04;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 // Record carries the structured error context
@@ -48,20 +49,21 @@ public class HandlingStructuredPayload {
             userService.load(userId); // throws UserNotFoundException
         } catch (UserNotFoundException e) {
             var details = e.details(); // extract typed record payload
-            logger.warning(() ->
+            logger.log(Level.WARNING, () ->
                 "User " + details.userId()           // typed field access
                 + " not found. Requested by: "
                 + details.requestedBy()              // typed field access
             );
             // details.userId(), details.reason() available as typed fields
-            System.out.println("userId    : " + details.userId());
-            System.out.println("reason    : " + details.reason());
-            System.out.println("requestedBy: " + details.requestedBy());
+            logger.log(Level.INFO, "userId    : {0}", details.userId());
+            logger.log(Level.INFO, "reason    : {0}", details.reason());
+            logger.log(Level.INFO, "requestedBy: {0}", details.requestedBy());
         }
 
         // Output:
-        // userId    : 12345
-        // reason    : User does not exist
-        // requestedBy: order-service
+        // WARNING: User 12345 not found. Requested by: order-service
+        // INFO: userId    : 12345
+        // INFO: reason    : User does not exist
+        // INFO: requestedBy: order-service
     }
 }
