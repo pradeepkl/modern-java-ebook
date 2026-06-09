@@ -9,8 +9,13 @@ package chapter04;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FailFastValidation {
+
+    private static final Logger logger =
+            Logger.getLogger(FailFastValidation.class.getName());
 
     // Simple Order model for demonstration
     static class Order {
@@ -38,8 +43,8 @@ public class FailFastValidation {
                     "Order must contain at least one item");
         }
         // Invariants satisfied — safe to proceed with processing
-        System.out.println("Processing order: " + order.getId()
-                + " with " + order.getItems().size() + " item(s).");
+        logger.log(Level.INFO, "Processing order: {0} with {1} item(s).",
+                new Object[] { order.getId(), order.getItems().size() });
     }
 
     public static void main(String[] args) {
@@ -54,19 +59,19 @@ public class FailFastValidation {
             Order empty = new Order("ORD-002", new ArrayList<>());
             validator.processOrder(empty);
         } catch (IllegalArgumentException e) {
-            System.out.println("Caught: " + e.getMessage());
+            logger.log(Level.WARNING, "Caught: {0}", e.getMessage());
         }
 
         // Null order — should fail fast with a clear message
         try {
             validator.processOrder(null);
         } catch (IllegalArgumentException e) {
-            System.out.println("Caught: " + e.getMessage());
+            logger.log(Level.WARNING, "Caught: {0}", e.getMessage());
         }
 
         // Output:
-        // Processing order: ORD-001 with 2 item(s).
-        // Caught: Order must contain at least one item
-        // Caught: Order cannot be null
+        // INFO: Processing order: ORD-001 with 2 item(s).
+        // WARNING: Caught: Order must contain at least one item
+        // WARNING: Caught: Order cannot be null
     }
 }
