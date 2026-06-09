@@ -7,7 +7,13 @@
  */
 package chapter04;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class ExceptionForFlowControl {
+
+    private static final Logger logger =
+            Logger.getLogger(ExceptionForFlowControl.class.getName());
 
     /**
      * Anti-pattern: using exception as flow control to parse input.
@@ -39,25 +45,25 @@ public class ExceptionForFlowControl {
         String nullInput    = null;
 
         // Anti-pattern: exception used to control flow
-        System.out.println("=== Exception-for-flow-control (anti-pattern) ===");
-        System.out.println(parseWithException(validInput));   // 42
-        System.out.println(parseWithException(invalidInput)); // 0
-        System.out.println(parseWithException(nullInput));    // 0
+        logger.log(Level.INFO, "=== Exception-for-flow-control (anti-pattern) ===");
+        logger.log(Level.INFO, "{0}", parseWithException(validInput));   // 42
+        logger.log(Level.INFO, "{0}", parseWithException(invalidInput)); // 0
+        logger.log(Level.INFO, "{0}", parseWithException(nullInput));    // 0
 
         // Better: validate first, parse only when safe
-        System.out.println("=== Validate-before-parse (preferred) ===");
-        System.out.println(parseWithValidation(validInput));   // 42
-        System.out.println(parseWithValidation(invalidInput)); // 0
-        System.out.println(parseWithValidation(nullInput));    // 0
+        logger.log(Level.INFO, "=== Validate-before-parse (preferred) ===");
+        logger.log(Level.INFO, "{0}", parseWithValidation(validInput));   // 42
+        logger.log(Level.INFO, "{0}", parseWithValidation(invalidInput)); // 0
+        logger.log(Level.INFO, "{0}", parseWithValidation(nullInput));    // 0
 
         // Output:
-        // === Exception-for-flow-control (anti-pattern) ===
-        // 42
-        // 0
-        // 0
-        // === Validate-before-parse (preferred) ===
-        // 42
-        // 0
-        // 0
+        // INFO: === Exception-for-flow-control (anti-pattern) ===
+        // INFO: 42
+        // INFO: 0
+        // INFO: 0
+        // INFO: === Validate-before-parse (preferred) ===
+        // INFO: 42
+        // INFO: 0
+        // INFO: 0
     }
 }
