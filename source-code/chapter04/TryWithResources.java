@@ -39,7 +39,7 @@ public class TryWithResources {
             String line;
             // Read each line until end of file
             while ((line = reader.readLine()) != null) {
-                System.out.println(line); // Print each line
+                logger.log(Level.INFO, line); // Log each line
             }
         } catch (IOException e) {
             // Lambda supplier defers string construction — only evaluated if logged
@@ -51,8 +51,8 @@ public class TryWithResources {
         new java.io.File(filename).delete();
 
         // Output:
-        // Hello, Modern Java!
-        // Try-with-resources is clean.
-        // Resources close automatically.
+        // INFO: Hello, Modern Java!
+        // INFO: Try-with-resources is clean.
+        // INFO: Resources close automatically.
     }
 }
