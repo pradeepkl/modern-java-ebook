@@ -7,6 +7,7 @@
  */
 package chapter04;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RecordAsLogContext {
@@ -36,10 +37,10 @@ public class RecordAsLogContext {
         );
 
         // Lambda defers string construction; record's toString is auto-generated
-        logger.info(() -> "Processing: " + context);
+        logger.log(Level.INFO, () -> "Processing: " + context);
 
         // Individual fields are accessible as typed accessors
-        logger.fine(() -> "Order: " + context.orderId()
+        logger.log(Level.FINE, () -> "Order: " + context.orderId()
                 + ", User: " + context.userId()
                 + ", Op: " + context.operation());
     }
@@ -51,12 +52,12 @@ public class RecordAsLogContext {
         var ctx1 = new LogContext("ORD-123", "USR-456", "payment-processing");
         var ctx2 = new LogContext("ORD-123", "USR-456", "payment-processing");
 
-        System.out.println(ctx1);           // auto-generated toString
-        System.out.println(ctx1.equals(ctx2)); // auto-generated equals
+        logger.log(Level.INFO, "{0}", ctx1);           // auto-generated toString
+        logger.log(Level.INFO, "{0}", ctx1.equals(ctx2)); // auto-generated equals
 
         // Output:
         // INFO: Processing: LogContext[orderId=ORD-123, userId=USR-456, operation=payment-processing]
-        // LogContext[orderId=ORD-123, userId=USR-456, operation=payment-processing]
-        // true
+        // INFO: LogContext[orderId=ORD-123, userId=USR-456, operation=payment-processing]
+        // INFO: true
     }
 }
