@@ -7,36 +7,37 @@
  */
 package chapter04;
 
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MultipleResources {
 
+    private static final Logger logger =
+            Logger.getLogger(MultipleResources.class.getName());
+
     // Simulated lightweight AutoCloseable resources for demonstration
     static class FakeConnection implements AutoCloseable {
-        FakeConnection() { System.out.println("Connection opened"); }
+        FakeConnection() { logger.log(Level.FINE, "Connection opened"); }
         FakeStatement prepareStatement(String sql) { return new FakeStatement(sql); }
-        @Override public void close() { System.out.println("Connection closed"); }
+        @Override public void close() { logger.log(Level.FINE, "Connection closed"); }
     }
 
     static class FakeStatement implements AutoCloseable {
         private final String sql;
         FakeStatement(String sql) {
             this.sql = sql;
-            System.out.println("Statement prepared: " + sql);
+            logger.log(Level.FINE, "Statement prepared: {0}", sql);
         }
         FakeResultSet executeQuery() { return new FakeResultSet(); }
-        @Override public void close() { System.out.println("Statement closed"); }
+        @Override public void close() { logger.log(Level.FINE, "Statement closed"); }
     }
 
     static class FakeResultSet implements AutoCloseable {
         private int row = 0;
-        FakeResultSet() { System.out.println("ResultSet opened"); }
+        FakeResultSet() { logger.log(Level.FINE, "ResultSet opened"); }
         boolean next() { return row++ < 2; } // simulate 2 rows
         String getString(String col) { return "row-" + row + "-" + col; }
-        @Override public void close() { System.out.println("ResultSet closed"); }
+        @Override public void close() { logger.log(Level.FINE, "ResultSet closed"); }
     }
 
     static class DataAccessException extends RuntimeException {
@@ -53,22 +54,23 @@ public class MultipleResources {
 
             while (resultSet.next()) {
                 // Process each row from the result set
-                System.out.println("  Row: " + resultSet.getString("name"));
+                logger.log(Level.INFO, "  Row: {0}", resultSet.getString("name"));
             }
         } catch (Exception e) {
             throw new DataAccessException("Query failed", e);
         }
 
-        System.out.println("All resources closed automatically in reverse order.");
+        logger.log(Level.INFO,
+                "All resources closed automatically in reverse order.");
         // Output:
-        // Connection opened
-        // Statement prepared: SELECT id, name FROM users
-        // ResultSet opened
-        //   Row: row-1-name
-        //   Row: row-2-name
-        // ResultSet closed
-        // Statement closed
-        // Connection closed
-        // All resources closed automatically in reverse order.
+        // FINE: Connection opened
+        // FINE: Statement prepared: SELECT id, name FROM users
+        // FINE: ResultSet opened
+        // INFO:   Row: row-1-name
+        // INFO:   Row: row-2-name
+        // FINE: ResultSet closed
+        // FINE: Statement closed
+        // FINE: Connection closed
+        // INFO: All resources closed automatically in reverse order.
     }
 }
