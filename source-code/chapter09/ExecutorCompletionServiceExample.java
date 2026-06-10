@@ -1,10 +1,4 @@
 // Java 8+
-/**
- * Listing 9.9 — ExecutorCompletionServiceExample.java
- * Demonstrates: Processing task results in completion order using ExecutorCompletionService
- * Chapter 9: Declarative and Structured Concurrency
- * Requires: Java 8+
- */
 package chapter09;
 
 import java.util.List;
@@ -15,6 +9,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/**
+ * Listing 9.9 — ExecutorCompletionServiceExample.java
+ * Demonstrates: Processing task results in completion order, not submission order
+ * Chapter 9: Declarative and Structured Concurrency
+ * Requires: Java 8+
+ */
 public class ExecutorCompletionServiceExample {
 
     private static final Logger log =
@@ -43,8 +43,9 @@ public class ExecutorCompletionServiceExample {
             });
         }
 
-        // Process results as they complete — NOT in submission order
-        // take() blocks until the next completed result is available
+        // Process results as they complete —
+        // not in submission order, but in completion order.
+        // take() blocks until the next completed result is available.
         for (int i = 0; i < orderIds.size(); i++) {
             Future<String> completed = completion.take(); // blocks for next done
             log.info("Completed: " + completed.get());   // get() returns immediately
@@ -53,12 +54,11 @@ public class ExecutorCompletionServiceExample {
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
-        // Output:
+        // Output (order varies by completion time, not submission order):
         // INFO: Completed: processed:ORD-003
         // INFO: Completed: processed:ORD-001
         // INFO: Completed: processed:ORD-005
         // INFO: Completed: processed:ORD-002
         // INFO: Completed: processed:ORD-004
-        // (order varies — fastest task logs first)
     }
 }
