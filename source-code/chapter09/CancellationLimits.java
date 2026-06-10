@@ -25,7 +25,7 @@ public class CancellationLimits {
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        // Submit a long-running task asynchronously
+        // Submit a long-running task to the thread pool
         CompletableFuture<String> future =
                 CompletableFuture.supplyAsync(() -> {
                     try {
@@ -62,6 +62,6 @@ public class CancellationLimits {
         // INFO: Task started — running...
         // INFO: Cancelled: true
         // WARNING: Future was cancelled — but task may still be running
-        // INFO: Task completed normally   <-- appears ~3s later, proving task ran
+        // INFO: Task completed normally   <-- appears ~3s later, proving thread ran on
     }
 }
