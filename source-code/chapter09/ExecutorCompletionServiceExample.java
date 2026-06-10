@@ -47,7 +47,7 @@ public class ExecutorCompletionServiceExample {
         // take() blocks until the next completed result is available
         for (int i = 0; i < orderIds.size(); i++) {
             Future<String> completed = completion.take(); // blocks for next done
-            log.info("Completed: " + completed.get());   // result immediately ready
+            log.info("Completed: " + completed.get());   // get() returns immediately
         }
 
         executor.shutdown();
@@ -59,6 +59,6 @@ public class ExecutorCompletionServiceExample {
         // INFO: Completed: processed:ORD-005
         // INFO: Completed: processed:ORD-002
         // INFO: Completed: processed:ORD-004
-        // (order varies — fastest task prints first)
+        // (order varies — fastest task logs first)
     }
 }
