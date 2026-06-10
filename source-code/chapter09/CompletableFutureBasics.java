@@ -18,13 +18,13 @@ public class CompletableFutureBasics {
     private static final Logger log =
             Logger.getLogger(CompletableFutureBasics.class.getName());
 
-    // Domain records representing order processing stages
+    // Immutable data carriers for the pipeline stages
     record OrderSummary(String orderId, double total) {}
     record EnrichedOrder(String orderId, double total, String currency) {}
 
     public static void main(String[] args) throws Exception {
 
-        // Fixed thread pool — stages execute on these threads
+        // Fixed thread pool — stages execute on pooled threads
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
         CompletableFuture<EnrichedOrder> pipeline =
@@ -35,27 +35,27 @@ public class CompletableFutureBasics {
                     executor)
 
             // Stage 2: transform — runs when Stage 1 completes
-            // No blocking — the runtime chains execution
+            // No blocking — the runtime chains execution automatically
             .thenApply(order ->
                     new EnrichedOrder(
                             order.orderId(),
                             order.total(),
                             "GBP"))
 
-            // Stage 3: log and pass through — side-effect stage
+            // Stage 3: log and pass through unchanged
             .thenApply(enriched -> {
                 log.info("Enriched: "
                         + enriched.orderId()
                         + " total=" + enriched.total()
                         + " currency=" + enriched.currency());
-                return enriched; // forward unchanged
+                return enriched; // propagate to next stage
             });
 
-        // Only block here — at the terminal result
-        // All intermediate stages ran without blocking the main thread
+        // Single blocking call — only at the terminal result
         EnrichedOrder result = pipeline.get();
         log.info("Final: " + result.orderId()
-                + " " + result.total() + " " + result.currency());
+                + " " + result.total()
+                + " " + result.currency());
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
