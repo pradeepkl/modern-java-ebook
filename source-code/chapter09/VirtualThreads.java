@@ -20,7 +20,7 @@ public class VirtualThreads {
     public static void main(String[] args) throws Exception {
 
         // Platform thread executor — bounded by OS resources
-        // Spring Boot's default Tomcat connector uses 200 threads
+        // Spring Boot Tomcat default: 200 threads
         ExecutorService platformExecutor =
                 Executors.newFixedThreadPool(200);
 
@@ -31,13 +31,13 @@ public class VirtualThreads {
         long start = System.currentTimeMillis();
 
         // 10,000 tasks — each simulating an I/O wait of 100ms
-        // With platform threads (pool=200): ~5000ms (50 batches)
-        // With virtual threads: ~100ms (all run concurrently)
+        // Platform threads: 9,800 would queue behind the 200-thread pool
+        // Virtual threads: all 10,000 run concurrently, parking cheaply
         for (int i = 0; i < 10_000; i++) {
             virtualExecutor.submit(() -> {
                 try {
-                    // Simulate I/O — blocking is cheap for virtual threads
-                    // JVM parks the virtual thread; carrier thread stays free
+                    // Blocking is cheap for virtual threads —
+                    // carrier thread is reassigned while this parks
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -46,7 +46,7 @@ public class VirtualThreads {
         }
 
         virtualExecutor.shutdown();
-        // Wait up to 30 seconds for all 10,000 tasks to finish
+        // All 10,000 tasks complete in ~100ms, not 5000ms
         virtualExecutor.awaitTermination(30, TimeUnit.SECONDS);
 
         long elapsed = System.currentTimeMillis() - start;
@@ -61,7 +61,7 @@ public class VirtualThreads {
 
         vThread.join(); // wait for the named virtual thread to finish
 
-        platformExecutor.shutdown(); // clean up unused platform executor
+        platformExecutor.shutdown();
 
         // Output:
         // INFO: 10,000 tasks completed in: ~130ms
