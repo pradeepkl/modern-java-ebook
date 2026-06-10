@@ -24,7 +24,8 @@ public class VirtualThreads {
         ExecutorService platformExecutor =
                 Executors.newFixedThreadPool(200);
 
-        // Virtual thread executor — JVM-managed, scales to millions
+        // Virtual thread executor — JVM-managed lightweight threads
+        // Can scale to millions of concurrent virtual threads
         ExecutorService virtualExecutor =
                 Executors.newVirtualThreadPerTaskExecutor();
 
@@ -32,12 +33,11 @@ public class VirtualThreads {
 
         // 10,000 tasks — each simulating an I/O wait of 100ms
         // Platform threads: 9,800 would queue behind the 200-thread pool
-        // Virtual threads: all 10,000 run concurrently, parking cheaply
+        // Virtual threads: all 10,000 run concurrently, blocking is cheap
         for (int i = 0; i < 10_000; i++) {
             virtualExecutor.submit(() -> {
                 try {
-                    // Blocking is cheap for virtual threads —
-                    // carrier thread is reassigned while this parks
+                    // Simulate I/O — virtual thread parks, carrier stays free
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -46,7 +46,7 @@ public class VirtualThreads {
         }
 
         virtualExecutor.shutdown();
-        // All 10,000 tasks complete in ~100ms, not 5000ms
+        // All 10,000 tasks complete in ~100ms, not 5000ms (10000/200 * 100)
         virtualExecutor.awaitTermination(30, TimeUnit.SECONDS);
 
         long elapsed = System.currentTimeMillis() - start;
@@ -54,12 +54,12 @@ public class VirtualThreads {
 
         // Explicit virtual thread creation with a named thread
         Thread vThread = Thread.ofVirtual()
-                .name("order-processor")   // named for observability
+                .name("order-processor")
                 .start(() ->
                     log.info("Running on virtual thread: "
                             + Thread.currentThread().isVirtual()));
 
-        vThread.join(); // wait for the named virtual thread to finish
+        vThread.join(); // Wait for the named virtual thread to finish
 
         platformExecutor.shutdown();
 
