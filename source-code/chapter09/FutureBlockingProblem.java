@@ -1,8 +1,8 @@
 // Java 8+
 /**
  * Listing 9.1 — FutureBlockingProblem.java
- * Demonstrates: The blocking nature of Future.get() and its limitations
- *               when orchestrating dependent asynchronous tasks.
+ * Demonstrates: The blocking nature of Future.get() and why chained
+ *               dependent tasks expose the limits of raw Future-based concurrency.
  * Chapter 9: Declarative and Structured Concurrency
  * Requires: Java 8+
  */
@@ -34,8 +34,8 @@ public class FutureBlockingProblem {
     }
 
     // Depends on both order and profile — cannot run until both complete
-    static PricingDecision calculatePrice(
-            OrderSummary order, CustomerProfile profile) {
+    static PricingDecision calculatePrice(OrderSummary order,
+                                          CustomerProfile profile) {
         double discount = profile.tier().equals("GOLD") ? 0.1 : 0.0;
         return new PricingDecision(order.total() * (1 - discount));
     }
@@ -44,27 +44,27 @@ public class FutureBlockingProblem {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        // Submit order and profile fetches in parallel
+        // Step 1: submit order and profile fetches in parallel
         Future<OrderSummary> orderFuture =
                 executor.submit(() -> fetchOrder("ORD-001"));
         Future<CustomerProfile> profileFuture =
                 executor.submit(() -> fetchProfile("CUST-42"));
 
-        // ❌ Both calls block the calling thread — it cannot do other work
-        OrderSummary order = orderFuture.get();        // blocks here
-        CustomerProfile profile = profileFuture.get(); // blocks here
+        // ❌ Both .get() calls block the calling thread.
+        // While waiting for orderFuture, this thread is idle — held hostage to I/O.
+        OrderSummary order     = orderFuture.get();    // blocks until order arrives
+        CustomerProfile profile = profileFuture.get(); // blocks until profile arrives
 
-        // Step 2: price calculation depends on both results above
+        // Step 2: pricing depends on both — submitted only after both unblock
         Future<PricingDecision> priceFuture =
                 executor.submit(() -> calculatePrice(order, profile));
 
-        PricingDecision decision = priceFuture.get();  // blocks again
+        PricingDecision decision = priceFuture.get(); // blocks again
         log.info("Final price: " + decision.finalPrice());
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
-        // Output:
-        // INFO: Final price: 269.991
+        // Output: INFO: Final price: 269.991
     }
 }
