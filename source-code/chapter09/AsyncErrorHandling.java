@@ -23,7 +23,7 @@ public class AsyncErrorHandling {
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
         // exceptionally — recover from failure with a fallback value
-        // explicit type parameter resolves inference ambiguity
+        // explicit cast needed so supplyAsync infers CompletableFuture<String>
         CompletableFuture<String> withRecovery =
                 CompletableFuture.<String>supplyAsync(() -> {
                     throw new RuntimeException("Payment gateway unavailable");
@@ -36,7 +36,7 @@ public class AsyncErrorHandling {
         log.info("Recovery result: " + withRecovery.get());
 
         // handle — called on both success and failure
-        // provides access to both result and exception in one callback
+        // provides access to both result and exception simultaneously
         CompletableFuture<String> withHandle =
                 CompletableFuture.supplyAsync(
                         () -> "order-processed", executor)
@@ -59,11 +59,11 @@ public class AsyncErrorHandling {
                     if (ex != null) {
                         log.severe("Async failure: " + ex.getMessage());
                     } else {
-                        log.info("Completed: " + result); // observe, not transform
+                        log.info("Completed: " + result);
                     }
                 });
 
-        withLogging.get();
+        withLogging.get(); // block until pipeline finishes
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
