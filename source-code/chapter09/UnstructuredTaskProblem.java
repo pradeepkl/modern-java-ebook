@@ -25,14 +25,15 @@ public class UnstructuredTaskProblem {
         // Task A succeeds — simulates normal work
         CompletableFuture<String> taskA =
                 CompletableFuture.supplyAsync(() -> {
-                    log.info("Task A running...");
+                    log.info("Task A running on: " + Thread.currentThread().getName());
                     return "result-A";
                 }, executor);
 
         // Task B fails — simulates a downstream service error
         CompletableFuture<String> taskB =
                 CompletableFuture.supplyAsync(() -> {
-                    // ❌ This exception does not cancel Task A automatically
+                    log.info("Task B running on: " + Thread.currentThread().getName());
+                    // Deliberately throw to show sibling is NOT cancelled
                     throw new RuntimeException("Task B failed");
                 }, executor);
 
@@ -44,20 +45,19 @@ public class UnstructuredTaskProblem {
             String b = taskB.get();   // throws ExecutionException here
             log.info("Both succeeded: " + a + ", " + b);
         } catch (Exception e) {
-            // Task A result is now orphaned — wasted work
+            // taskA result is now orphaned — wasted work
             log.warning("One task failed: " + e.getMessage());
-            log.warning("Task A result orphaned — no automatic sibling cancellation");
+            log.warning("taskA completed: " + taskA.isDone()
+                    + " — result orphaned, no automatic cancellation occurred");
         }
-
-        // Manual cancellation required — structured concurrency solves this
-        taskA.cancel(true);
 
         executor.shutdown();
         executor.awaitTermination(5, TimeUnit.SECONDS);
 
         // Output:
-        // INFO: Task A running...
+        // INFO: Task A running on: pool-1-thread-1
+        // INFO: Task B running on: pool-1-thread-2
         // WARNING: One task failed: java.lang.RuntimeException: Task B failed
-        // WARNING: Task A result orphaned — no automatic sibling cancellation
+        // WARNING: taskA completed: true — result orphaned, no automatic cancellation occurred
     }
 }
