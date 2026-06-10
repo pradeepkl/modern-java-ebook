@@ -48,15 +48,17 @@ public class CompletableFutureTimeout {
         CompletableFuture<String> withFallback =
                 CompletableFuture.supplyAsync(() -> {
                     try {
-                        Thread.sleep(2000); // still too slow
+                        Thread.sleep(2000); // also too slow
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
                     return "late result";
                 }, executor)
-                .completeOnTimeout("fallback-result", 1, TimeUnit.SECONDS);
+                .completeOnTimeout(
+                        "fallback-result",  // default value on timeout
+                        1, TimeUnit.SECONDS);
 
-        log.info("Result: " + withFallback.get()); // uses fallback
+        log.info("Result: " + withFallback.get());
 
         // Graceful executor shutdown
         executor.shutdown();
