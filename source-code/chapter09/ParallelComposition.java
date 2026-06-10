@@ -50,14 +50,14 @@ public class ParallelComposition {
                                 () -> "processed:" + id, executor))
                         .collect(Collectors.toList());
 
-        // allOf returns Void; use to synchronize on all completions
+        // allOf returns Void; used only to signal completion of all
         CompletableFuture<Void> allDone =
                 CompletableFuture.allOf(
                         futures.toArray(new CompletableFuture[0]));
 
         allDone.get(); // block until every future finishes
 
-        // Safe to join() now — all futures are already complete
+        // Safe to join() now — all futures already completed
         List<String> results = futures.stream()
                 .map(CompletableFuture::join)
                 .collect(Collectors.toList());
