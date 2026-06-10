@@ -40,7 +40,7 @@ public class ThenApplyVsAsync {
                         });
 
         // thenApplyAsync — continuation submitted to executor as a new task,
-        // potentially on a different thread from the completing stage
+        // potentially running on a different thread from the supplier
         CompletableFuture<String> offloaded =
                 CompletableFuture
                         .supplyAsync(() -> {
@@ -51,7 +51,7 @@ public class ThenApplyVsAsync {
                         .thenApplyAsync(data -> {
                             log.info("thenApplyAsync (offloaded) on: "
                                     + Thread.currentThread().getName());
-                            return data.toUpperCase(); // new task on executor
+                            return data.toUpperCase(); // may be a different thread
                         }, executor);
 
         log.info("Inline result:    " + inline.get());
