@@ -30,8 +30,9 @@ public class CompletableFutureBasics {
         CompletableFuture<EnrichedOrder> pipeline =
 
             // Stage 1: fetch order asynchronously on executor thread
-            CompletableFuture.supplyAsync(() ->
-                    new OrderSummary("ORD-001", 299.99), executor)
+            CompletableFuture.supplyAsync(
+                    () -> new OrderSummary("ORD-001", 299.99),
+                    executor)
 
             // Stage 2: transform — runs when Stage 1 completes
             // No blocking — the runtime chains execution
@@ -41,25 +42,26 @@ public class CompletableFutureBasics {
                             order.total(),
                             "GBP"))
 
-            // Stage 3: log and pass through — side-effect in pipeline
+            // Stage 3: log and pass through — side-effect stage
             .thenApply(enriched -> {
                 log.info("Enriched: "
                         + enriched.orderId()
-                        + " " + enriched.currency());
-                return enriched; // pass value to next stage
+                        + " total=" + enriched.total()
+                        + " currency=" + enriched.currency());
+                return enriched; // forward unchanged
             });
 
-        // Only block here — at the terminal result, not mid-pipeline
+        // Only block here — at the terminal result
+        // All intermediate stages ran without blocking the main thread
         EnrichedOrder result = pipeline.get();
         log.info("Final: " + result.orderId()
-                + " total=" + result.total()
-                + " currency=" + result.currency());
+                + " " + result.total() + " " + result.currency());
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
         // Output:
-        // INFO: Enriched: ORD-001 GBP
-        // INFO: Final: ORD-001 total=299.99 currency=GBP
+        // INFO: Enriched: ORD-001 total=299.99 currency=GBP
+        // INFO: Final: ORD-001 299.99 GBP
     }
 }
