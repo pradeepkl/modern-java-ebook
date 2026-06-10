@@ -1,7 +1,8 @@
 // Java 8+
 /**
  * Listing 9.1 — FutureBlockingProblem.java
- * Demonstrates: The blocking problem with raw Future.get() calls
+ * Demonstrates: The blocking nature of Future.get() and its limitations
+ *               when orchestrating dependent asynchronous tasks.
  * Chapter 9: Declarative and Structured Concurrency
  * Requires: Java 8+
  */
@@ -32,7 +33,7 @@ public class FutureBlockingProblem {
         return new CustomerProfile(customerId, "GOLD");
     }
 
-    // Depends on both results — cannot run until both are available
+    // Depends on both order and profile — cannot run until both complete
     static PricingDecision calculatePrice(
             OrderSummary order, CustomerProfile profile) {
         double discount = profile.tier().equals("GOLD") ? 0.1 : 0.0;
@@ -43,21 +44,21 @@ public class FutureBlockingProblem {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        // Submit both tasks in parallel — good so far
+        // Submit order and profile fetches in parallel
         Future<OrderSummary> orderFuture =
                 executor.submit(() -> fetchOrder("ORD-001"));
         Future<CustomerProfile> profileFuture =
                 executor.submit(() -> fetchProfile("CUST-42"));
 
-        // ❌ Blocks the calling thread — thread held hostage waiting for I/O
+        // ❌ Both calls block the calling thread — it cannot do other work
         OrderSummary order = orderFuture.get();        // blocks here
         CustomerProfile profile = profileFuture.get(); // blocks here
 
-        // Step 2: price calculation depends on both results
+        // Step 2: price calculation depends on both results above
         Future<PricingDecision> priceFuture =
                 executor.submit(() -> calculatePrice(order, profile));
 
-        PricingDecision decision = priceFuture.get(); // blocks again
+        PricingDecision decision = priceFuture.get();  // blocks again
         log.info("Final price: " + decision.finalPrice());
 
         executor.shutdown();
