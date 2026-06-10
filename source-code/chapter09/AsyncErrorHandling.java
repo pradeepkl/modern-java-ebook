@@ -1,7 +1,7 @@
 // Java 8+
 /**
  * Listing 9.7 — AsyncErrorHandling.java
- * Demonstrates: Error handling in CompletableFuture pipelines
+ * Demonstrates: Error handling in async pipelines using exceptionally, handle, and whenComplete
  * Chapter 9: Declarative and Structured Concurrency
  * Requires: Java 8+
  */
@@ -23,7 +23,7 @@ public class AsyncErrorHandling {
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
         // exceptionally — recover from failure with a fallback value
-        // explicit cast needed so supplyAsync infers CompletableFuture<String>
+        // Cast needed so compiler infers CompletableFuture<String> correctly
         CompletableFuture<String> withRecovery =
                 CompletableFuture.<String>supplyAsync(() -> {
                     throw new RuntimeException("Payment gateway unavailable");
@@ -36,7 +36,7 @@ public class AsyncErrorHandling {
         log.info("Recovery result: " + withRecovery.get());
 
         // handle — called on both success and failure
-        // provides access to both result and exception simultaneously
+        // provides access to both result and exception for transformation
         CompletableFuture<String> withHandle =
                 CompletableFuture.supplyAsync(
                         () -> "order-processed", executor)
@@ -59,11 +59,11 @@ public class AsyncErrorHandling {
                     if (ex != null) {
                         log.severe("Async failure: " + ex.getMessage());
                     } else {
-                        log.info("Completed: " + result);
+                        log.info("Completed: " + result); // observe, not transform
                     }
                 });
 
-        withLogging.get(); // block until pipeline finishes
+        withLogging.get();
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
