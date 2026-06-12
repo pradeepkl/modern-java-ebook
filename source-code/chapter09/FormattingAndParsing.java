@@ -17,10 +17,7 @@ import java.util.logging.Logger;
 
 public class FormattingAndParsing {
 
-    private static final Logger log =
-            Logger.getLogger(FormattingAndParsing.class.getName());
-
-    // Static formatters — immutable, thread-safe, sharable
+    // Static, shared — immutable and thread-safe
     private static final DateTimeFormatter ISO_DATE =
             DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter CUSTOM =
@@ -37,24 +34,28 @@ public class FormattingAndParsing {
                     .toFormatter();
 
     public static void main(String[] args) {
+        Logger log = Logger.getLogger(FormattingAndParsing.class.getName());
+
         // Formatting a LocalDate
         LocalDate date = LocalDate.of(2024, 6, 18);
-        String iso   = date.format(ISO_DATE);   // 2024-06-18
-        String human = date.format(CUSTOM);     // 18 Jun 2024
-        log.info("ISO format:    " + iso);
-        log.info("Human format:  " + human);
+        String iso   = date.format(ISO_DATE);  // ISO 8601 — for storage/APIs
+        String human = date.format(CUSTOM);    // Human-readable — for display
+
+        log.info("ISO format:   " + iso);
+        log.info("Human format: " + human);
 
         // Formatting a ZonedDateTime with zone abbreviation
         ZonedDateTime zdt = ZonedDateTime.of(
                 date.atTime(14, 30), ZoneId.of("Asia/Kolkata"));
-        String full = zdt.format(WITH_ZONE);    // 18 Jun 2024 14:30 IST
-        log.info("Zoned format:  " + full);
+        String full = zdt.format(WITH_ZONE);
+        log.info("Zoned format: " + full);
 
         // Parsing — always wrap in try-catch; user input is unreliable
         try {
             LocalDate parsed = LocalDate.parse("2024-06-18", ISO_DATE);
-            log.info("Parsed date:   " + parsed);
+            log.info("Parsed date:  " + parsed);
         } catch (DateTimeParseException e) {
+            // Handle invalid format — do not propagate raw exception
             log.warning("Invalid date format: " + e.getMessage());
         }
 
@@ -62,17 +63,18 @@ public class FormattingAndParsing {
         LocalDate a = LocalDate.parse("2024-06-18",  FLEXIBLE);
         LocalDate b = LocalDate.parse("18/06/2024",  FLEXIBLE);
         LocalDate c = LocalDate.parse("18 Jun 2024", FLEXIBLE);
-        log.info("Flexible a:    " + a);
-        log.info("Flexible b:    " + b);
-        log.info("Flexible c:    " + c);
+
+        log.info("Flexible a: " + a);
+        log.info("Flexible b: " + b);
+        log.info("Flexible c: " + c);
 
         // Output:
-        // ISO format:    2024-06-18
-        // Human format:  18 Jun 2024
-        // Zoned format:  18 Jun 2024 14:30 IST
-        // Parsed date:   2024-06-18
-        // Flexible a:    2024-06-18
-        // Flexible b:    2024-06-18
-        // Flexible c:    2024-06-18
+        // ISO format:   2024-06-18
+        // Human format: 18 Jun 2024
+        // Zoned format: 18 Jun 2024 14:30 IST
+        // Parsed date:  2024-06-18
+        // Flexible a: 2024-06-18
+        // Flexible b: 2024-06-18
+        // Flexible c: 2024-06-18
     }
 }
