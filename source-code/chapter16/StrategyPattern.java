@@ -45,14 +45,14 @@ public class StrategyPattern {
 
         Function<Order, Order> noDiscount = o -> o; // identity strategy
 
-        // Registry: select strategy by tier at runtime — call site never changes
+        // Registry — select strategy by tier at runtime; call site never changes
         var strategies = Map.of(
                 "PREMIUM",  premiumDiscount,
                 "SEASONAL", seasonalDiscount,
                 "BULK",     bulkDiscount,
                 "NONE",     noDiscount);
 
-        // Fixed call site: rule.apply(order) — rule is the variable part
+        // Fixed call site: rule.apply(order) — only the rule varies
         var rule = strategies.getOrDefault("PREMIUM", noDiscount);
         var discounted = rule.apply(order);
 
