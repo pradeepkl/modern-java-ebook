@@ -19,10 +19,11 @@ public class ChainOfResponsibility {
             Logger.getLogger(MethodHandles.lookup()
                     .lookupClass().getName());
 
-    // Domain records
+    // Order record — the request travelling through the chain
     record Order(String orderId, String customerId,
                  double amount, String status, String region) {}
 
+    // Result record — produced by whichever handler claims the request
     record OrderResult(String orderId,
                        String handler, String outcome) {}
 
@@ -30,45 +31,48 @@ public class ChainOfResponsibility {
 
         var order = new Order("ORD-001", "C1", 1500.0, "PENDING", "UK");
 
-        // Each handler returns present result if it claims the order
+        // Each handler: Function<Order, Optional<OrderResult>>
+        // Returns present result if it handles; empty to pass down
         Function<Order, Optional<OrderResult>> standardHandler =
                 o -> o.amount() <= 500.0
                         ? Optional.of(new OrderResult(
-                                o.orderId(), "STANDARD", "Approved up to £500"))
+                                o.orderId(), "STANDARD",
+                                "Approved up to £500"))
                         : Optional.empty();
 
         Function<Order, Optional<OrderResult>> seniorHandler =
                 o -> o.amount() <= 2000.0
                         ? Optional.of(new OrderResult(
-                                o.orderId(), "SENIOR", "Approved up to £2000"))
+                                o.orderId(), "SENIOR",
+                                "Approved up to £2000"))
                         : Optional.empty();
 
-        // Director always handles — acts as fallback
         Function<Order, Optional<OrderResult>> directorHandler =
                 o -> Optional.of(new OrderResult(
-                        o.orderId(), "DIRECTOR", "Approved — escalated to director"));
+                        o.orderId(), "DIRECTOR",
+                        "Approved — escalated to director"));
 
-        // stream + flatMap + findFirst IS the chain traversal
+        // Chain — stream + flatMap + findFirst IS the traversal
         var chain = List.of(standardHandler, seniorHandler, directorHandler);
 
         var result = chain.stream()
                 .map(handler -> handler.apply(order))   // apply each handler
-                .flatMap(Optional::stream)               // unwrap non-empty results
-                .findFirst();                            // stop at first match
+                .flatMap(Optional::stream)               // unwrap non-empty
+                .findFirst();                            // short-circuit stop
 
         result.ifPresentOrElse(
                 r -> log.info(r.handler() + " → " + r.outcome()),
                 () -> log.info("No handler found"));
 
-        // VIP handler — prepended without changing chain structure
+        // Extending the chain — add vipHandler without changing structure
         Function<Order, Optional<OrderResult>> vipHandler =
                 o -> o.customerId().startsWith("VIP")
                         ? Optional.of(new OrderResult(
                                 o.orderId(), "VIP", "Fast-tracked approval"))
                         : Optional.empty();
 
-        var extendedChain = List.of(vipHandler, standardHandler,
-                seniorHandler, directorHandler);
+        var extendedChain = List.of(
+                vipHandler, standardHandler, seniorHandler, directorHandler);
 
         extendedChain.stream()
                 .map(h -> h.apply(order))
@@ -77,7 +81,7 @@ public class ChainOfResponsibility {
                 .ifPresent(r -> log.info(r.handler() + " → " + r.outcome()));
 
         // Output:
-        // SENIOR → Approved up to £2000
-        // SENIOR → Approved up to £2000
+        // INFO: SENIOR → Approved up to £2000
+        // INFO: SENIOR → Approved up to £2000
     }
 }
