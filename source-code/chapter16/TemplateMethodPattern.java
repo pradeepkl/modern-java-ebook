@@ -21,7 +21,7 @@ public class TemplateMethodPattern {
             Logger.getLogger(MethodHandles.lookup()
                     .lookupClass().getName());
 
-    // Order record — immutable value object
+    // Domain record — immutable order value object
     record Order(String orderId, String customerId,
                  double amount, String status, String region) {}
 
@@ -36,7 +36,7 @@ public class TemplateMethodPattern {
         return orders.stream()
                 .filter(filter)   // step 1: select relevant orders
                 .map(enrich)      // step 2: transform each order
-                .sorted(sort)     // step 3: arrange results
+                .sorted(sort)     // step 3: arrange the result
                 .toList();
     }
 
@@ -53,7 +53,7 @@ public class TemplateMethodPattern {
                 orders,
                 o -> o.status().equals("CONFIRMED") && o.region().equals("UK"),
                 o -> new Order(o.orderId(), o.customerId(),
-                        o.amount() * 1.20, o.status(), o.region()), // apply 20% VAT
+                        o.amount() * 1.20, o.status(), o.region()),
                 Comparator.comparingDouble(Order::amount).reversed());
 
         ukVat.forEach(o -> log.info(o.orderId() + " £" + o.amount()));
@@ -68,10 +68,10 @@ public class TemplateMethodPattern {
         allByCustomer.forEach(o -> log.info(o.customerId() + " " + o.orderId()));
 
         // Output:
-        // ORD-003 £720.0
-        // ORD-001 £480.0
-        // C1 ORD-001
-        // C1 ORD-003
-        // C2 ORD-002
+        // INFO: ORD-003 £720.0
+        // INFO: ORD-001 £480.0
+        // INFO: C1 ORD-001
+        // INFO: C1 ORD-003
+        // INFO: C2 ORD-002
     }
 }
