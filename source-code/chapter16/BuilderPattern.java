@@ -39,16 +39,16 @@ public class BuilderPattern {
             String sortField) {}
 
     static class ReportConfigBuilder {
-        private String format      = "PDF";
-        private String region      = "ALL";
+        private String format    = "PDF";
+        private String region    = "ALL";
         private boolean includeVat = true;
-        private int maxRows        = 100;
-        private String sortField   = "amount";
+        private int maxRows      = 100;
+        private String sortField = "amount";
 
-        ReportConfigBuilder format(String f)     { this.format = f;      return this; }
-        ReportConfigBuilder region(String r)     { this.region = r;      return this; }
-        ReportConfigBuilder maxRows(int n)       { this.maxRows = n;     return this; }
-        ReportConfigBuilder includeVat(boolean v){ this.includeVat = v;  return this; }
+        ReportConfigBuilder format(String f)      { this.format = f; return this; }
+        ReportConfigBuilder region(String r)      { this.region = r; return this; }
+        ReportConfigBuilder maxRows(int n)        { this.maxRows = n; return this; }
+        ReportConfigBuilder includeVat(boolean v) { this.includeVat = v; return this; }
 
         ReportConfig build() {
             return new ReportConfig(format, region,
