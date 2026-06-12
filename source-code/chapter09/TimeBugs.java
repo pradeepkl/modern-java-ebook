@@ -33,44 +33,40 @@ public class TimeBugs {
     public static void demonstrateBugs() {
         // Bug 1: LocalDateTime for audit timestamps — no timezone
         LocalDateTime auditTime = LocalDateTime.now();
-        log.info("Ambiguous audit time (no zone): " + auditTime);
+        log.info("BAD  audit timestamp (no zone): " + auditTime);
 
         // Correct: Instant for audit timestamps — always UTC
         Instant auditInstant = Instant.now();
-        log.info("Unambiguous audit instant (UTC): " + auditInstant);
+        log.info("GOOD audit timestamp (UTC Instant): " + auditInstant);
 
-        // Bug 2: Storing user appointment as Instant loses DST meaning
+        // Bug 2: Storing user appointment as Instant — loses DST meaning
         Instant appointmentWrong = Instant.now();
-        log.info("Wrong appointment (Instant loses wall-clock meaning): " + appointmentWrong);
+        log.info("BAD  appointment (Instant loses DST context): " + appointmentWrong);
 
-        // Correct: ZonedDateTime preserves timezone as part of the data
+        // Correct: ZonedDateTime preserves timezone rules including DST
         ZonedDateTime appointmentRight =
                 ZonedDateTime.of(2024, 6, 18, 14, 0, 0, 0,
                         ZoneId.of("Asia/Kolkata"));
-        log.info("Correct appointment (ZonedDateTime): " + appointmentRight);
+        log.info("GOOD appointment (ZonedDateTime): " + appointmentRight);
 
-        // Bug 3: Hardcoded UTC offset — wrong for DST regions
+        // Bug 3: Hardcoded UTC offset — wrong when DST changes
         ZoneOffset hardcoded = ZoneOffset.of("+01:00");
-        log.info("Hardcoded offset (wrong half the year): " + hardcoded);
+        log.info("BAD  London offset hardcoded: " + hardcoded
+                + " (wrong in winter — London is UTC+0 then)");
 
         // Correct: ZoneId knows DST rules automatically
         ZoneId london = ZoneId.of("Europe/London");
-        log.info("Correct zone with DST rules: " + london);
-
-        // Safe formatter is thread-safe; sharedFormatter is not
-        log.info("Safe formatted date: " +
-                appointmentRight.toLocalDate().format(SAFE_FORMATTER));
+        log.info("GOOD London ZoneId (DST-aware): " + london);
     }
 
     public static void main(String[] args) {
         demonstrateBugs();
         // Output:
-        // Ambiguous audit time (no zone): 2024-06-18T14:00:00.123
-        // Unambiguous audit instant (UTC): 2024-06-18T08:30:00.456Z
-        // Wrong appointment (Instant loses wall-clock meaning): 2024-06-18T08:30:00.456Z
-        // Correct appointment (ZonedDateTime): 2024-06-18T14:00+05:30[Asia/Kolkata]
-        // Hardcoded offset (wrong half the year): +01:00
-        // Correct zone with DST rules: Europe/London
-        // Safe formatted date: 2024-06-18
+        // BAD  audit timestamp (no zone): 2024-06-18T14:00:00.123
+        // GOOD audit timestamp (UTC Instant): 2024-06-18T08:30:00.456Z
+        // BAD  appointment (Instant loses DST context): 2024-06-18T08:30:00.456Z
+        // GOOD appointment (ZonedDateTime): 2024-06-18T14:00+05:30[Asia/Kolkata]
+        // BAD  London offset hardcoded: +01:00 (wrong in winter — London is UTC+0 then)
+        // GOOD London ZoneId (DST-aware): Europe/London
     }
 }
