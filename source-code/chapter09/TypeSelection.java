@@ -26,7 +26,7 @@ public class TypeSelection {
         // LocalDate — date without time or timezone
         LocalDate invoiceDueDate = LocalDate.of(2024, 12, 31);
         LocalDate today = LocalDate.now();
-        boolean isOverdue = today.isAfter(invoiceDueDate); // compare dates only
+        boolean isOverdue = today.isAfter(invoiceDueDate); // compare calendar dates
         LOG.info("Invoice due: " + invoiceDueDate + " | Overdue: " + isOverdue);
 
         // LocalTime — time without date or timezone
