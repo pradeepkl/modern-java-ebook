@@ -21,7 +21,7 @@ public class DurationAndPeriod {
 
         // Duration — machine elapsed time (works with Instant)
         Instant start = Instant.now();
-        Instant end = start.plusMillis(1500); // simulate 1500ms elapsed
+        Instant end = start.plusMillis(1500); // simulate 1.5 seconds elapsed
 
         Duration elapsed = Duration.between(start, end);
         long millis  = elapsed.toMillis();   // 1500
@@ -48,14 +48,14 @@ public class DurationAndPeriod {
 
         LOG.info("Subscription months: " + months);
 
-        // Period arithmetic — add 12 months for renewal
+        // Period arithmetic — adding calendar months
         LocalDate renewalDate = subscriptionEnd.plus(Period.ofMonths(12));
         LOG.info("Renewal date: " + renewalDate); // 2025-07-15
 
         // Key distinction: Duration.ofDays(30) is always 30 × 24 hours
         // Period.ofMonths(1) varies — Jan=31 days, Feb=28/29, Jun=30
         Duration fixedDays   = Duration.ofDays(30);
-        Period calendarMonth = Period.ofMonths(1);
+        Period   calendarMonth = Period.ofMonths(1);
 
         LOG.info("Duration 30 days in hours: " + fixedDays.toHours()); // 720
         LOG.info("Period 1 month (calendar-aware): " + calendarMonth);
