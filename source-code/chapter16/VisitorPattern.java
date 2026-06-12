@@ -17,7 +17,8 @@ public class VisitorPattern {
             Logger.getLogger(MethodHandles.lookup()
                     .lookupClass().getName());
 
-    // Sealed hierarchy — compiler enforces exhaustiveness in switch
+    // Fixed: the switch dispatch mechanism
+    // Variable: the behaviour per sealed type
     sealed interface DiscountRule
             permits PremiumRule, BulkRule, SeasonalRule, NoRule {}
 
@@ -26,12 +27,10 @@ public class VisitorPattern {
     record SeasonalRule(String season, double rate) implements DiscountRule {}
     record NoRule() implements DiscountRule {}
 
-    // Domain record representing an order
     record Order(String orderId, String customerId,
                  double amount, String status, String region) {}
 
-    // Fixed: the switch dispatch mechanism
-    // Variable: the behaviour per sealed type
+    // Compiler enforces exhaustiveness — no default needed
     static double applyRule(Order order, DiscountRule rule) {
         return switch (rule) {
             case PremiumRule p  -> order.amount() * (1 - p.percentage());
@@ -44,7 +43,6 @@ public class VisitorPattern {
         };
     }
 
-    // Second visitor: describe each rule — same dispatch, different behaviour
     static String describeRule(DiscountRule rule) {
         return switch (rule) {
             case PremiumRule p  -> "Premium " + (p.percentage() * 100) + "%";
@@ -65,12 +63,10 @@ public class VisitorPattern {
                 new SeasonalRule("WINTER", 0.20),
                 new NoRule());
 
-        // Each rule dispatched through the same switch mechanism
         rules.forEach(rule ->
                 log.info(String.format("%s → £%.2f",
                         describeRule(rule),
                         applyRule(order, rule))));
-
         // Output:
         // Premium 15.0% → £510.00
         // Bulk above £500.0 → £540.00
