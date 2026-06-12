@@ -1,9 +1,9 @@
-// Java 21+
+// Java 16+
 /**
  * Listing 16.8 — CommandPattern.java
- * Demonstrates: Command pattern using records, generics, lambdas, streams, and Optional
+ * Demonstrates: Command pattern using records, generics, lambdas, streams
  * Chapter 16: Design Patterns Reimagined with Modern Java
- * Requires: Java 21+
+ * Requires: Java 16+
  */
 package chapter16;
 
@@ -17,15 +17,20 @@ import java.util.stream.Collectors;
 public class CommandPattern {
 
     private static final Logger log =
-            Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+            Logger.getLogger(MethodHandles.lookup()
+                    .lookupClass().getName());
 
     record Order(String orderId, String customerId,
                  double amount, String status, String region) {}
 
-    record OrderResult(String orderId, boolean success, String message) {}
+    record OrderResult(String orderId,
+                       boolean success, String message) {}
 
     // Command<T> — fixed structure, variable behaviour
-    record Command<T>(String name, Supplier<T> execute, Runnable undo) {}
+    record Command<T>(
+            String name,
+            Supplier<T> execute,
+            Runnable undo) {}
 
     static List<Command<OrderResult>> buildWorkflow(Order order) {
         return List.of(
