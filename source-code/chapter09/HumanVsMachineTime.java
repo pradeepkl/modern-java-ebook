@@ -16,7 +16,8 @@ import java.util.logging.Logger;
 
 public class HumanVsMachineTime {
 
-    private static final Logger LOG = Logger.getLogger(HumanVsMachineTime.class.getName());
+    private static final Logger LOG =
+            Logger.getLogger(HumanVsMachineTime.class.getName());
 
     public static void main(String[] args) {
 
@@ -24,45 +25,46 @@ public class HumanVsMachineTime {
 
         // A birthday — repeats every year, no timezone needed
         LocalDate birthday = LocalDate.of(1990, 4, 12);
-        LOG.info("Birthday (LocalDate): " + birthday);
 
         // A store opening time — same wall-clock time every day
         LocalTime openingTime = LocalTime.of(9, 0);
-        LOG.info("Opening time (LocalTime): " + openingTime);
 
         // A scheduled appointment — date and time, no timezone
-        // "Tuesday at 3pm" means the same regardless of which city
-        // the calendar app is running in
+        // "Tuesday at 3pm" means the same regardless of
+        // which city the calendar app is running in
         LocalDateTime appointment = LocalDateTime.of(2024, 6, 18, 15, 0);
-        LOG.info("Appointment (LocalDateTime): " + appointment);
+
+        LOG.info("=== HUMAN TIME ===");
+        LOG.info("Birthday        : " + birthday);       // 1990-04-12
+        LOG.info("Opening time    : " + openingTime);    // 09:00
+        LOG.info("Appointment     : " + appointment);    // 2024-06-18T15:00
 
         // --- MACHINE TIME: precise moments, universally unambiguous ---
 
         // A payment timestamp — this happened at this exact instant
         // Every system in the world agrees on this moment
         Instant paymentProcessed = Instant.now();
-        LOG.info("Payment processed (Instant): " + paymentProcessed);
 
-        // An audit log entry — captured at a precise point in time
+        // An audit log entry — captured at this nanosecond
         Instant recordCreated = Instant.now();
-        LOG.info("Record created (Instant): " + recordCreated);
 
         // A message send time — parsed from ISO-8601 UTC string
         // The Z suffix means UTC — machine time is always UTC
         Instant messageSent = Instant.parse("2024-06-18T10:15:30Z");
-        LOG.info("Message sent (Instant): " + messageSent);
 
-        // Key rule: LocalDateTime has NO timezone — never use it for audit logs
-        LOG.info("--- Summary ---");
-        LOG.info("Human time types: LocalDate, LocalTime, LocalDateTime");
-        LOG.info("Machine time type: Instant (always UTC, always unambiguous)");
+        LOG.info("=== MACHINE TIME ===");
+        LOG.info("Payment processed : " + paymentProcessed);
+        LOG.info("Record created    : " + recordCreated);
+        LOG.info("Message sent      : " + messageSent);  // 2024-06-18T10:15:30Z
 
         // Output:
-        // Birthday (LocalDate): 1990-04-12
-        // Opening time (LocalTime): 09:00
-        // Appointment (LocalDateTime): 2024-06-18T15:00
-        // Payment processed (Instant): 2024-06-18T10:15:30.123456789Z  (varies)
-        // Record created (Instant): 2024-06-18T10:15:30.234567890Z      (varies)
-        // Message sent (Instant): 2024-06-18T10:15:30Z
+        // === HUMAN TIME ===
+        // Birthday        : 1990-04-12
+        // Opening time    : 09:00
+        // Appointment     : 2024-06-18T15:00
+        // === MACHINE TIME ===
+        // Payment processed : 2024-06-18T08:23:45.123456789Z  (current instant)
+        // Record created    : 2024-06-18T08:23:45.123456790Z  (current instant)
+        // Message sent      : 2024-06-18T10:15:30Z
     }
 }
