@@ -1,19 +1,16 @@
-// Java 21+ (preview — instance main methods, JEP 445/463)
-// Feature shown: traditional verbose POJO with explicit constructor, getters, and equals/hashCode (pre-records style, for contrast), final in Java 8+
-
-/**
- * Listing 1.2 — ProductTraditional.java
- * Demonstrates: Traditional verbose POJO with explicit fields, constructor,
- * getters, equals, hashCode, and toString — the pre-records boilerplate style,
- * shown here for contrast with the modern records approach.
- * Chapter 1: Modern Java: A Shift in Mindset
- * Requires: Java 21+ (compiled with --enable-preview --release 21 for
- * the void main() instance main method)
- */
+// Java 25+
+// Feature shown: compact source files and instance main methods, final in Java 25+
 package chapter01;
 
 import java.util.logging.Logger;
 
+/**
+ * Listing 1.3 — ProductTraditional.java
+ * Demonstrates: traditional verbose POJO with explicit constructor, getters,
+ * equals, hashCode, and toString (pre-records style, for contrast)
+ * Chapter 1: Modern Java: A Shift in Mindset
+ * Requires: Java 25+ (instance main method via JEP 512)
+ */
 public class ProductTraditional {
 
     private static final Logger log =
@@ -38,7 +35,7 @@ public class ProductTraditional {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Product p)) return false; // pattern matching instanceof, Java 16+
+            if (!(o instanceof Product p)) return false;
             return Double.compare(p.price, price) == 0
                 && stock == p.stock
                 && name.equals(p.name);
