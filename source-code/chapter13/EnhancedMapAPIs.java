@@ -1,9 +1,13 @@
-// Java 8+
+// Java 25+
+// Feature shown: enhanced Map APIs (computeIfAbsent, computeIfPresent, merge, getOrDefault), final in Java 8+
+
 /**
  * Listing 13.7 — EnhancedMapAPIs.java
- * Demonstrates: computeIfAbsent, computeIfPresent, merge, getOrDefault
+ * Demonstrates: computeIfAbsent, computeIfPresent, merge, and getOrDefault
+ * on java.util.Map for declarative, intent-revealing mutation.
  * Chapter 13: Declarative Data Transformations
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter13;
 
@@ -19,51 +23,51 @@ public class EnhancedMapAPIs {
 
     record Order(String customerId, double amount) {}
 
-    public static void main(String[] args) {
-
+    void main() {
         List<Order> orders = List.of(
                 new Order("C01", 250.0),
-                new Order("C01", 80.0),
+                new Order("C01",  80.0),
                 new Order("C02", 400.0),
-                new Order("C02", 150.0),
-                new Order("C99", 0.0)
+                new Order("C01", 150.0),
+                new Order("C02",  60.0)
         );
 
+        // computeIfAbsent — create-if-missing in one call
         Map<String, List<Order>> grouped = new HashMap<>();
-        Map<String, Double> totalsByCustomer = new HashMap<>();
-
         for (Order order : orders) {
-            String customerId = order.customerId();
-
-            // computeIfAbsent — create list if missing, then add in one call
-            grouped.computeIfAbsent(customerId,
-                            id -> new ArrayList<>())
+            grouped.computeIfAbsent(order.customerId(),
+                            id -> new ArrayList<>())   // list created only when absent
                     .add(order);
-
-            // merge — accumulate totals: absent → store amount, present → sum
-            totalsByCustomer.merge(
-                    customerId,
-                    order.amount(),
-                    Double::sum);
         }
+        LOG.info("Grouped keys: " + grouped.keySet());
 
-        // computeIfPresent — remove low-value orders only if key exists
+        // computeIfPresent — update only if key exists; no-op when absent
         grouped.computeIfPresent("C01",
                 (id, orderList) -> {
-                    orderList.removeIf(o -> o.amount() < 100.0);
-                    return orderList; // returning null would remove the key
+                    orderList.removeIf(o -> o.amount() < 100.0); // drop small orders
+                    return orderList;
                 });
+        LOG.info("C01 after filter (amounts >= 100): " + grouped.get("C01").stream()
+                .map(Order::amount).toList());
 
-        // getOrDefault — safe retrieval with fallback for absent key
+        // merge — accumulate totals by customer key
+        Map<String, Double> totalsByCustomer = new HashMap<>();
+        for (Order order : orders) {
+            totalsByCustomer.merge(
+                    order.customerId(),
+                    order.amount(),
+                    Double::sum);              // combine existing + new amount
+        }
+        LOG.info("Totals: " + totalsByCustomer);
+
+        // getOrDefault — safe retrieval with fallback; no null check needed
         double total = totalsByCustomer.getOrDefault("C99", 0.0);
-
-        LOG.info("Grouped orders: " + grouped);
-        LOG.info("Totals by customer: " + totalsByCustomer);
-        LOG.info("Total for C99 (getOrDefault): " + total);
+        LOG.info("Total for unknown customer C99: " + total);
 
         // Output:
-        // Grouped orders: {C01=[Order[customerId=C01, amount=250.0]], C02=[...]}
-        // Totals by customer: {C01=330.0, C02=550.0, C99=0.0}
-        // Total for C99 (getOrDefault): 0.0
+        // Grouped keys: [C01, C02]
+        // C01 after filter (amounts >= 100): [250.0, 150.0]
+        // Totals: {C01=480.0, C02=460.0}
+        // Total for unknown customer C99: 0.0
     }
 }
