@@ -1,53 +1,61 @@
-// Java 8+
+// Java 25+
+// Feature shown: default methods in interfaces, final in Java 8+
+
 /**
  * Listing 3.4 — PaymentProcessorWithDefault.java
- * Demonstrates: Default methods in functional interfaces
+ * Demonstrates: default methods in interfaces allowing shared behavior
+ * alongside abstract contract methods, enabling interface evolution
+ * without breaking existing implementations.
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 8+
+ * Requires: Java 8+ for default methods; Java 25+ for void main()
+ * instance main method (JEP 512)
  */
 package chapter03;
 
+import java.util.logging.Logger;
+
 public class PaymentProcessorWithDefault {
+
+    private static final Logger LOG =
+            Logger.getLogger(PaymentProcessorWithDefault.class.getName());
 
     // Functional interface with one abstract method and one default method
     @FunctionalInterface
     interface PaymentProcessor {
-        // Abstract method — must be implemented (e.g., via lambda)
+
+        // Abstract method — must be implemented (here via lambda)
         void processPayment(double amount);
 
         // Default method — shared implementation available to all instances
         default void refundPayment(double amount) {
-            System.out.println("Refunding payment of $" + amount);
+            LOG.info("Refunding payment of $" + amount);
         }
     }
 
-    public static void main(String[] args) {
-
-        // Lambda provides only the abstract method implementation
+    void main() {
+        // Lambda satisfies the single abstract method processPayment
         PaymentProcessor creditCardProcessor =
-                amount -> System.out.println(
+                amount -> LOG.info(
                         "Processing credit card payment of $" + amount);
 
-        PaymentProcessor paypalProcessor =
-                amount -> System.out.println(
-                        "Processing PayPal payment of $" + amount);
-
-        // Uses the default refundPayment() from the interface
+        // Calls the default method — no override needed
         creditCardProcessor.refundPayment(100.0);
 
-        // Uses the lambda-provided processPayment() implementation
+        // Calls the lambda-provided implementation
         creditCardProcessor.processPayment(150.0);
 
-        // PayPal processor also inherits the default refund behavior
-        paypalProcessor.refundPayment(75.0);
+        // A second processor with its own lambda, sharing the same default
+        PaymentProcessor paypalProcessor =
+                amount -> LOG.info(
+                        "Processing PayPal payment of $" + amount);
 
-        // PayPal processor uses its own lambda for processing
-        paypalProcessor.processPayment(200.0);
+        paypalProcessor.refundPayment(75.0);
+        paypalProcessor.processPayment(75.0);
 
         // Output:
-        // Refunding payment of $100.0
-        // Processing credit card payment of $150.0
-        // Refunding payment of $75.0
-        // Processing PayPal payment of $200.0
+        // INFO: Refunding payment of $100.0
+        // INFO: Processing credit card payment of $150.0
+        // INFO: Refunding payment of $75.0
+        // INFO: Processing PayPal payment of $75.0
     }
 }
