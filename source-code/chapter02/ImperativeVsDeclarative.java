@@ -1,54 +1,51 @@
-// Java 8+
-/**
- * Listing 2.1 — ImperativeVsDeclarative.java
- * Demonstrates: Contrasting imperative loop-based filtering with declarative Stream pipelines
- * Chapter 2: Expressing Intent with Modern Java
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: compact source files and instance main methods, final in Java 25+
 package chapter02;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 
+/**
+ * Listing 2.1 — ImperativeVsDeclarative.java
+ * Demonstrates: imperative loop-based filtering versus an intent-oriented
+ * Stream pipeline performing the same transformation on a list of users.
+ * Chapter 2: Writing Java the Modern Way
+ * Requires: Java 25+ (instance main method via JEP 512)
+ */
 public class ImperativeVsDeclarative {
 
-    // Compact record representing a system user with email and active status
-    record User(String email, boolean active) {
-        boolean isActive() { return active; }
-        String getEmail() { return email; }
-    }
+    private static final Logger log =
+            Logger.getLogger(ImperativeVsDeclarative.class.getName());
 
-    public static void main(String[] args) {
+    // Simple value type: an email address and an active flag
+    record User(String email, boolean active) {}
+
+    void main() {
         var users = List.of(
-            new User("alice@example.com", true),
-            new User("bob@example.com", false),
-            new User("carol@example.com", true)
-        );
+                new User("alice@example.com", true),
+                new User("bob@example.com", false),
+                new User("carol@example.com", true));
 
-        // Imperative: manual iteration with mutable accumulator — intent is buried in mechanics
+        // Imperative — mechanics dominate: loop, condition, mutation
         List<String> imperativeEmails = new ArrayList<>();
         for (User user : users) {
-            if (user.isActive()) {
-                imperativeEmails.add(user.getEmail()); // mutation hidden inside loop body
+            if (user.active()) {                      // guard condition
+                imperativeEmails.add(user.email());   // manual accumulation
             }
         }
 
-        // Declarative: pipeline expresses intent directly — filter, then map, then collect
-        List<String> declarativeEmails = users.stream()
-                .filter(User::isActive)   // keep only active users
-                .map(User::getEmail)      // extract email addresses
-                .toList();                // collect into an unmodifiable list (Java 16+)
+        // Intent-oriented — outcome is visible: active users, then emails
+        List<String> intentEmails = users.stream()
+                .filter(User::active)   // keep only active users
+                .map(User::email)       // extract the email address
+                .toList();              // collect into an unmodifiable list
 
-        System.out.println("Imperative  : " + imperativeEmails);
-        System.out.println("Declarative : " + declarativeEmails);
-
-        // Both approaches produce identical results; declarative reads closer to the domain
-        boolean equivalent = imperativeEmails.equals(declarativeEmails);
-        System.out.println("Results match: " + equivalent);
+        log.info("Imperative : " + imperativeEmails);
+        log.info("Intent     : " + intentEmails);
 
         // Output:
-        // Imperative  : [alice@example.com, carol@example.com]
-        // Declarative : [alice@example.com, carol@example.com]
-        // Results match: true
+        // INFO: Imperative : [alice@example.com, carol@example.com]
+        // INFO: Intent     : [alice@example.com, carol@example.com]
     }
 }
