@@ -36,36 +36,37 @@ public class StreamComposition {
         return List.of(new Order("ORD-1003", "EU", 800.0));
     }
 
+    private static String getRegion() { return "APAC"; }
+
     private static String getRegionOverride(String orderId) {
-        return orderId.equals("ORD-1001") ? null : "OVERRIDE-" + orderId;
+        return orderId.equals("ORD-1001") ? "US-WEST" : null; // null for most
     }
 
     void main() {
+        // Stream.concat — combine two streams sequentially (UNION ALL)
         List<Order> ukOrders = getUKOrders();
         List<Order> usOrders = getUSOrders();
-
-        // Stream.concat — combine two streams sequentially (SQL: UNION ALL)
         List<Order> allOrders = Stream.concat(ukOrders.stream(), usOrders.stream())
                 .sorted(Comparator.comparing(Order::orderId))
                 .toList();
-        LOG.info("Combined and sorted orders: " + allOrders.stream().map(Order::orderId).toList());
+        LOG.info("Combined and sorted: " + allOrders.stream().map(Order::orderId).toList());
 
-        // Nested concat for more than two streams
+        // Stream.concat nested — more than two sources
         List<Order> allRegions = Stream.concat(
-                        Stream.concat(ukOrders.stream(), usOrders.stream()),
-                        getEUOrders().stream())
+                Stream.concat(ukOrders.stream(), usOrders.stream()),
+                getEUOrders().stream())
                 .toList();
         LOG.info("All regions count: " + allRegions.size());
 
         // Stream.of — fixed set of known values
         Set<String> statusSet = Stream.of("CONFIRMED", "PENDING", "SHIPPED", "DELIVERED")
                 .collect(Collectors.toSet());
-        LOG.info("Valid statuses: " + statusSet);
+        LOG.info("Valid statuses: " + statusSet.size() + " entries");
 
         // Stream.ofNullable — null-safe single element
-        String maybeRegion = null;
-        long safeCount = Stream.ofNullable(maybeRegion).count();
-        LOG.info("ofNullable(null) element count: " + safeCount);
+        String maybeRegion = getRegion(); // non-null here
+        long regionCount = Stream.ofNullable(maybeRegion).count();
+        LOG.info("Region stream size (non-null): " + regionCount);
 
         // flatMap with ofNullable — filter nulls from a stream
         List<String> overrides = allRegions.stream()
@@ -74,20 +75,23 @@ public class StreamComposition {
                 .toList();
         LOG.info("Non-null region overrides: " + overrides);
 
-        // Stream.iterate (3-arg, Java 9+) — built-in termination, no limit() needed
-        List<Integer> orderNumbers = Stream.iterate(1000, n -> n <= 1010, n -> n + 1).toList();
+        // Stream.iterate — three-arg form (Java 9+) with built-in termination
+        List<Integer> orderNumbers = Stream.iterate(1000, n -> n <= 1010, n -> n + 1)
+                .toList();
         LOG.info("Order numbers: " + orderNumbers);
 
-        // Stream.generate — values from a Supplier; must pair with limit()
-        List<String> requestIds = Stream.generate(() -> "REQ-" + UUID.randomUUID()).limit(3).toList();
+        // Stream.generate — values from a Supplier, paired with limit()
+        List<String> requestIds = Stream.generate(() -> "REQ-" + UUID.randomUUID())
+                .limit(3)
+                .toList();
         LOG.info("Generated request IDs count: " + requestIds.size());
 
         // Output:
-        // Combined and sorted orders: [ORD-1001, ORD-1002, ORD-1004, ORD-1005]
+        // Combined and sorted: [ORD-1001, ORD-1002, ORD-1004, ORD-1005]
         // All regions count: 5
-        // Valid statuses: [CONFIRMED, PENDING, SHIPPED, DELIVERED] (order may vary)
-        // ofNullable(null) element count: 0
-        // Non-null region overrides: [OVERRIDE-ORD-1002, OVERRIDE-ORD-1005, ...]
+        // Valid statuses: 4 entries
+        // Region stream size (non-null): 1
+        // Non-null region overrides: [US-WEST]
         // Order numbers: [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
         // Generated request IDs count: 3
     }
