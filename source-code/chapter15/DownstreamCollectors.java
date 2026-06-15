@@ -3,12 +3,11 @@
 
 /**
  * Listing 15.4 — DownstreamCollectors.java
- * Demonstrates: downstream collectors composed inside groupingBy —
+ * Demonstrates: downstream collectors composed inside groupingBy:
  *   counting(), summingDouble(), averagingDouble(), mapping(),
  *   filtering() (Java 9+), and teeing() (Java 12+)
  * Chapter 15: Streams: Orchestrating Pipelines
- * Requires: Java 25+ (compiled with --enable-preview --release 21 for
- * the void main() instance main method)
+ * Requires: Java 25+ (void main() instance main method, JEP 512)
  */
 package chapter15;
 
@@ -19,46 +18,54 @@ import java.util.stream.Collectors;
 
 public class DownstreamCollectors {
 
-    private static final Logger LOG = Logger.getLogger(DownstreamCollectors.class.getName());
-
     record Order(String orderId, String region, double amount) {}
+
     record RegionStats(long count, double total) {}
+
+    private static final Logger LOG =
+            Logger.getLogger(DownstreamCollectors.class.getName());
 
     void main() {
         List<Order> orders = List.of(
                 new Order("ORD-001", "UK", 150.0),
                 new Order("ORD-002", "US", 300.0),
                 new Order("ORD-003", "UK", 450.0),
-                new Order("ORD-004", "EU", 100.0)
+                new Order("ORD-004", "EU", 120.0)
         );
 
         // counting() — count per group
         Map<String, Long> countPerRegion = orders.stream()
-                .collect(Collectors.groupingBy(Order::region, Collectors.counting()));
+                .collect(Collectors.groupingBy(
+                        Order::region,
+                        Collectors.counting()));
         LOG.info("Count per region: " + countPerRegion);
 
         // summingDouble() — sum per group
         Map<String, Double> sumPerRegion = orders.stream()
-                .collect(Collectors.groupingBy(Order::region,
+                .collect(Collectors.groupingBy(
+                        Order::region,
                         Collectors.summingDouble(Order::amount)));
         LOG.info("Sum per region: " + sumPerRegion);
 
         // averagingDouble() — average per group
         Map<String, Double> avgPerRegion = orders.stream()
-                .collect(Collectors.groupingBy(Order::region,
+                .collect(Collectors.groupingBy(
+                        Order::region,
                         Collectors.averagingDouble(Order::amount)));
         LOG.info("Avg per region: " + avgPerRegion);
 
-        // mapping() — transform elements before collecting into each group
+        // mapping() — transform elements before collecting
         Map<String, List<String>> idsByRegion = orders.stream()
-                .collect(Collectors.groupingBy(Order::region,
+                .collect(Collectors.groupingBy(
+                        Order::region,
                         Collectors.mapping(Order::orderId, Collectors.toList())));
         LOG.info("IDs by region: " + idsByRegion);
 
         // filtering() — filter within each group (Java 9+)
-        // Preserves all group keys even when filtered group is empty
+        // Preserves all group keys even if a filtered group is empty
         Map<String, List<Order>> highValueByRegion = orders.stream()
-                .collect(Collectors.groupingBy(Order::region,
+                .collect(Collectors.groupingBy(
+                        Order::region,
                         Collectors.filtering(o -> o.amount() > 200.0, Collectors.toList())));
         LOG.info("High-value by region: " + highValueByRegion);
 
@@ -69,14 +76,14 @@ public class DownstreamCollectors {
                         Collectors.counting(),
                         Collectors.summingDouble(Order::amount),
                         RegionStats::new));
-        LOG.info("UK stats — count=" + ukStats.count() + ", total=" + ukStats.total());
+        LOG.info("UK stats: count=" + ukStats.count() + ", total=" + ukStats.total());
 
         // Output:
         // Count per region: {EU=1, UK=2, US=1}
-        // Sum per region: {EU=100.0, UK=600.0, US=300.0}
-        // Avg per region: {EU=100.0, UK=300.0, US=300.0}
+        // Sum per region: {EU=120.0, UK=600.0, US=300.0}
+        // Avg per region: {EU=120.0, UK=300.0, US=300.0}
         // IDs by region: {EU=[ORD-004], UK=[ORD-001, ORD-003], US=[ORD-002]}
         // High-value by region: {EU=[], UK=[ORD-003], US=[ORD-002]}
-        // UK stats — count=2, total=600.0
+        // UK stats: count=2, total=600.0
     }
 }
