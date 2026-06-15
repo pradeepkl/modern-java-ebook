@@ -1,12 +1,11 @@
-// Java 21+ (preview — instance main methods, JEP 445/463)
-// Feature shown: var (type inference), final in Java 10+
-
+// Java 25+
+// Feature shown: var (local variable type inference), final in Java 10+
 /**
  * Listing 1.1 — VarTypeInference.java
  * Demonstrates: var keyword for local variable type inference
  * Chapter 1: Modern Java: A Shift in Mindset
- * Requires: Java 10+ for var; compiled with --enable-preview --release 21 for
- * the void main() instance main method
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter01;
 
@@ -27,18 +26,20 @@ public class VarTypeInference {
                 new HashMap<String, List<Integer>>();
 
         // var lets the compiler infer the type from the initializer
-        var scores = new HashMap<String, List<Integer>>();  // inferred: HashMap<String, List<Integer>>
-        var name = "Alice";       // inferred: String
-        var threshold = 42;       // inferred: int
+        var scores = new HashMap<String, List<Integer>>();
+        var name = "Alice";
+        var threshold = 42;
 
         scores.put(name, List.of(threshold, 85, 91));
 
-        // verbose and scores are the same type; var is still statically typed
-        verbose.put("control", List.of(0));
-
-        // Wrong type would cause a compile error — type safety is preserved
+        // Still statically typed — wrong type would cause a compile error
         log.info(name + ": " + scores.get(name));
 
+        // verbose map is structurally identical; var reduces declaration noise
+        verbose.put(name, List.of(threshold, 85, 91));
+        log.info("verbose map result: " + verbose.get(name));
+
         // Output: Alice: [42, 85, 91]
+        // Output: verbose map result: [42, 85, 91]
     }
 }
