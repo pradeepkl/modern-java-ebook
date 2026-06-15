@@ -4,7 +4,7 @@
 /**
  * Listing 15.6 — CustomCollector.java
  * Demonstrates: building a custom Collector using Collector.of() with
- *               supplier, accumulator, combiner, and finisher functions
+ * supplier, accumulator, combiner, and finisher functions
  * Chapter 15: Streams: Orchestrating Pipelines
  * Requires: Java 25+ (compiled with --enable-preview --release 21 for
  * the void main() instance main method)
