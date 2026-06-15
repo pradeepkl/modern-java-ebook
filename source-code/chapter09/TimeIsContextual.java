@@ -1,59 +1,64 @@
-// Java 8+
-/**
- * Listing 9.1 — TimeIsContextual.java
- * Demonstrates: Why time requires context — the same clock value
- *               represents different moments in different time zones
- * Chapter 9: Modern Date and Time
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: LocalDateTime and ZonedDateTime, final in Java 8+
 package chapter09;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 
+/**
+ * Listing 9.1 — TimeIsContextual.java
+ * Demonstrates: LocalDateTime vs ZonedDateTime — why time requires context
+ * Chapter 9: Modern Date and Time
+ * Requires: Java 25+ (instance main method via JEP 512)
+ */
 public class TimeIsContextual {
 
     private static final Logger LOG = Logger.getLogger(TimeIsContextual.class.getName());
 
-    public static void main(String[] args) {
-
-        // Ambiguous: no time zone — which 9:00 is this?
+    void main() {
+        // NOT IDEAL: ambiguous — no time zone, no context
         LocalDateTime ambiguous = LocalDateTime.of(2024, 3, 15, 9, 0);
-        LOG.info("Ambiguous (no zone): " + ambiguous);
+        LOG.info("Ambiguous local time (no zone): " + ambiguous);
 
-        // Unambiguous: 9:00 AM in Mumbai (IST = UTC+5:30)
-        ZonedDateTime mumbaiMorning = ZonedDateTime.of(
-                2024, 3, 15, 9, 0, 0, 0,
-                ZoneId.of("Asia/Kolkata"));
+        // Correct: unambiguous moment in a specific time zone
+        ZonedDateTime mumbaiMorning =
+                ZonedDateTime.of(2024, 3, 15, 9, 0, 0, 0,
+                        ZoneId.of("Asia/Kolkata"));
 
-        // Unambiguous: 9:00 AM in London (GMT = UTC+0)
-        ZonedDateTime londonMorning = ZonedDateTime.of(
-                2024, 3, 15, 9, 0, 0, 0,
-                ZoneId.of("Europe/London"));
+        ZonedDateTime londonMorning =
+                ZonedDateTime.of(2024, 3, 15, 9, 0, 0, 0,
+                        ZoneId.of("Europe/London"));
 
-        LOG.info("Mumbai  9:00 as Instant: " + mumbaiMorning.toInstant());
-        LOG.info("London  9:00 as Instant: " + londonMorning.toInstant());
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z");
 
-        // Same clock face, different moments in time
+        // Log each zoned moment clearly
+        LOG.info("Mumbai  9:00: " + mumbaiMorning.format(fmt));
+        LOG.info("London  9:00: " + londonMorning.format(fmt));
+
+        // Compare the underlying machine instants
         boolean sameInstant = mumbaiMorning.toInstant()
                 .equals(londonMorning.toInstant());
-        LOG.info("Same instant? " + sameInstant); // false
 
-        // Mumbai is 5h30m ahead of London — quantify the gap
-        Duration gap = Duration.between(
-                mumbaiMorning.toInstant(),
-                londonMorning.toInstant());
-        LOG.info("London 9:00 is " + gap.toMinutes()
-                + " minutes after Mumbai 9:00"); // 330 minutes = 5h30m
+        // false — Mumbai 9:00 is 3.5 hours ahead of London 9:00
+        LOG.info("Same instant in time? " + sameInstant);
+
+        // Show the offset difference in seconds
+        long diffSeconds = londonMorning.toInstant().getEpochSecond()
+                - mumbaiMorning.toInstant().getEpochSecond();
+        long diffHours   = diffSeconds / 3600;
+        long diffMinutes = (Math.abs(diffSeconds) % 3600) / 60;
+
+        LOG.info("London is " + Math.abs(diffHours) + "h " + diffMinutes
+                + "m ahead of Mumbai at the same clock reading");
 
         // Output:
-        // Ambiguous (no zone): 2024-03-15T09:00
-        // Mumbai  9:00 as Instant: 2024-03-15T03:30:00Z
-        // London  9:00 as Instant: 2024-03-15T09:00:00Z
-        // Same instant? false
-        // London 9:00 is 330 minutes after Mumbai 9:00
+        // Ambiguous local time (no zone): 2024-03-15T09:00
+        // Mumbai  9:00: 2024-03-15 09:00 IST
+        // London  9:00: 2024-03-15 09:00 GMT
+        // Same instant in time? false
+        // London is 3h 30m ahead of Mumbai at the same clock reading
     }
 }
