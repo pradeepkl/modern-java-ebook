@@ -1,65 +1,51 @@
-// Java 8+
+// Java 25+
+// Feature shown: functional interfaces, final in Java 8+
+
 /**
  * Listing 3.3 — PaymentProcessorInterface.java
- * Demonstrates: Functional interfaces as behavioral blueprints with lambda implementations
+ * Demonstrates: functional interfaces used as behavioral blueprints,
+ * implemented via lambda expressions for diverse payment strategies
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
-/**
- * A functional interface defining a single payment processing contract.
- * Any lambda with signature (double) -> void satisfies this interface.
- */
+import java.util.logging.Logger;
+
 @FunctionalInterface
 interface PaymentProcessor {
-    void processPayment(double amount); // single abstract method
+    // Single abstract method — qualifies this as a functional interface
+    void processPayment(double amount);
 }
 
 public class PaymentProcessorInterface {
 
-    public static void main(String[] args) {
+    private static final Logger LOG =
+            Logger.getLogger(PaymentProcessorInterface.class.getName());
 
-        // Lambda implementation: credit card processor
+    void main() {
+        // Each lambda is a distinct implementation of PaymentProcessor
         PaymentProcessor creditCardProcessor =
-                amount -> System.out.println(
+                amount -> LOG.info(
                         "Processing credit card payment of $" + amount);
 
-        // Lambda implementation: PayPal processor
         PaymentProcessor paypalProcessor =
-                amount -> System.out.println(
+                amount -> LOG.info(
                         "Processing PayPal payment of $" + amount);
 
-        // Lambda implementation: cryptocurrency processor
         PaymentProcessor cryptoProcessor =
-                amount -> System.out.println(
+                amount -> LOG.info(
                         "Processing cryptocurrency payment of $" + amount);
 
-        // Each processor is a distinct behavioral strategy — no subclasses needed
+        // Each processor handles the same contract with different behavior
         creditCardProcessor.processPayment(100.0);
         paypalProcessor.processPayment(150.0);
         cryptoProcessor.processPayment(200.0);
 
-        // Processors can be selected dynamically at runtime
-        System.out.println("\n--- Dynamic dispatch via interface reference ---");
-        PaymentProcessor selected = selectProcessor("paypal");
-        selected.processPayment(299.99);
-
         // Output:
-        // Processing credit card payment of $100.0
-        // Processing PayPal payment of $150.0
-        // Processing cryptocurrency payment of $200.0
-        //
-        // --- Dynamic dispatch via interface reference ---
-        // Processing PayPal payment of $299.99
-    }
-
-    /** Returns a processor strategy based on a runtime string value. */
-    static PaymentProcessor selectProcessor(String type) {
-        return switch (type) {                                  // switch expression (Java 14+)
-            case "credit" -> amount -> System.out.println("Processing credit card payment of $" + amount);
-            case "paypal" -> amount -> System.out.println("Processing PayPal payment of $" + amount);
-            default       -> amount -> System.out.println("Processing cryptocurrency payment of $" + amount);
-        };
+        // INFO: Processing credit card payment of $100.0
+        // INFO: Processing PayPal payment of $150.0
+        // INFO: Processing cryptocurrency payment of $200.0
     }
 }
