@@ -1,9 +1,13 @@
-// Java 8+
+// Java 25+
+// Feature shown: ThreadLocal per-thread isolated state, final in Java 8+
+
 /**
  * Listing 10.11 — ThreadLocalCorrelationId.java
- * Demonstrates: Per-thread correlation ID using ThreadLocal for request tracing
+ * Demonstrates: ThreadLocal providing per-thread isolated state for
+ * request-scoped correlation IDs without any shared-state coordination.
  * Chapter 10: Concurrency Foundations and Coordination
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter10;
 
@@ -31,20 +35,20 @@ public class ThreadLocalCorrelationId {
     }
 
     // CRITICAL: always remove when done
-    // Thread pool threads are reused — failing to remove leaves
-    // the previous request's ID on the thread for the next request
+    // Thread pool threads are reused — failing to remove leaves the
+    // previous request's ID on the thread for the next request
     public static void clear() {
         correlationId.remove();
     }
 
     public static void handleRequest(String requestId) {
         try {
-            set(requestId); // bind this request's ID to the current thread
+            set(requestId);
             log.info("[" + get() + "] Processing request");
             processOrder();
             sendNotification();
         } finally {
-            clear(); // always clean up — thread pool reuse safety
+            clear(); // Always clean up — thread pool reuse
         }
     }
 
@@ -56,12 +60,12 @@ public class ThreadLocalCorrelationId {
         log.info("[" + get() + "] Notification sent");
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    void main() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(3);
 
-        // Simulate 4 concurrent requests, each with its own correlation ID
-        for (int i = 1; i <= 4; i++) {
-            final String requestId = "REQ-" + i + "-" + UUID.randomUUID().toString().substring(0, 8);
+        // Simulate three concurrent requests, each with its own ID
+        for (int i = 1; i <= 3; i++) {
+            final String requestId = "req-" + i + "-" + UUID.randomUUID().toString().substring(0, 8);
             executor.submit(() -> handleRequest(requestId));
         }
 
@@ -69,10 +73,10 @@ public class ThreadLocalCorrelationId {
         executor.awaitTermination(5, TimeUnit.SECONDS);
 
         // Output:
-        // INFO: [REQ-1-xxxxxxxx] Processing request
-        // INFO: [REQ-1-xxxxxxxx] Order processed
-        // INFO: [REQ-1-xxxxxxxx] Notification sent
-        // INFO: [REQ-2-xxxxxxxx] Processing request  (different ID, same thread reused safely)
-        // ...
+        // INFO: [req-1-...] Processing request
+        // INFO: [req-1-...] Order processed
+        // INFO: [req-1-...] Notification sent
+        // INFO: [req-2-...] Processing request
+        // (each request's three log lines share the same correlation ID)
     }
 }
