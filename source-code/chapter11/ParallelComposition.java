@@ -1,4 +1,13 @@
-// Java 8+
+// Java 25+
+// Feature shown: thenCombine and allOf for parallel composition, final in Java 8+
+/**
+ * Listing 11.5 — ParallelComposition.java
+ * Demonstrates: thenCombine for combining two independent async tasks,
+ *               and allOf for waiting on a list of futures in parallel
+ * Chapter 11: Declarative and Structured Concurrency
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 package chapter11;
 
 import java.util.List;
@@ -9,13 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/**
- * Listing 11.5 — ParallelComposition.java
- * Demonstrates: thenCombine for two independent parallel tasks and
- *               allOf for waiting on a list of futures
- * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 8+
- */
 public class ParallelComposition {
 
     private static final Logger log =
@@ -25,7 +27,7 @@ public class ParallelComposition {
     record PriceQuote(String productId, double price) {}
     record ProductInfo(InventoryStatus inventory, PriceQuote price) {}
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
@@ -42,7 +44,7 @@ public class ParallelComposition {
         ProductInfo info = productInfo.get();
         log.info("Product: " + info.inventory() + " / " + info.price());
 
-        // allOf — submit multiple independent futures, wait for ALL
+        // allOf — submit all futures, then wait for ALL to complete
         List<String> orderIds = List.of("ORD-001", "ORD-002", "ORD-003");
 
         List<CompletableFuture<String>> futures =
@@ -51,14 +53,11 @@ public class ParallelComposition {
                                 () -> "processed:" + id, executor))
                         .collect(Collectors.toList());
 
-        // allOf returns Void; used only to block until every future finishes
+        // allOf returns Void; use join() on each future to collect results
         CompletableFuture<Void> allDone =
-                CompletableFuture.allOf(
-                        futures.toArray(new CompletableFuture[0]));
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
-        allDone.get(); // block until all complete
-
-        // Safe to join() now — all futures are already done
+        allDone.get(); // block until every future is done
         List<String> results = futures.stream()
                 .map(CompletableFuture::join)
                 .collect(Collectors.toList());
