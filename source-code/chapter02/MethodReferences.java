@@ -1,49 +1,63 @@
-// Java 8+
-/**
- * Listing 2.7 — MethodReferences.java
- * Demonstrates: Four types of method references in Java 8+
- * Chapter 2: Expressing Intent with Modern Java
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: method references, final in Java 8+
 package chapter02;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.logging.Logger;
 
+/**
+ * Listing 2.5 — MethodReferences.java
+ * Demonstrates: method references as concise alternatives to single-method lambdas
+ * Chapter 2: Writing Java the Modern Way
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 public class MethodReferences {
 
-    public static void main(String[] args) {
+    private static final Logger log =
+            Logger.getLogger(MethodReferences.class.getName());
 
-        // Static method reference: ClassName::staticMethodName
-        // Equivalent lambda: s -> Integer.parseInt(s)
-        Function<String, Integer> parseViaRef = Integer::parseInt;
-        System.out.println(parseViaRef.apply("42")); // 42
+    // Simple record used as the data type in the stream pipeline
+    record Product(String name, double price) {}
 
-        // Instance method reference on a specific object: instance::methodName
-        // Equivalent lambda: () -> greeting.toUpperCase()
-        String greeting = "Hello, World!";
-        Supplier<String> toUpperCase = greeting::toUpperCase;
-        System.out.println(toUpperCase.get()); // HELLO, WORLD!
+    void main() {
+        var products = List.of(
+                new Product("Keyboard", 79.99),
+                new Product("Monitor", 349.99),
+                new Product("Mouse", 29.99));
 
-        // Instance method reference on an arbitrary object of a type: ClassName::instanceMethodName
-        // Equivalent lambda: (a, b) -> a.compareToIgnoreCase(b)
-        List<String> names = Arrays.asList("Charlie", "Alice", "Bob");
-        names.sort(String::compareToIgnoreCase); // sorts alphabetically, case-insensitive
-        System.out.println(names); // [Alice, Bob, Charlie]
+        // Lambda — explicit parameter and method call
+        var lambdaNames = products.stream()
+                .map(p -> p.name())   // p is named, call is explicit
+                .toList();
 
-        // Constructor reference: ClassName::new
-        // Equivalent lambda: () -> new ArrayList<>()
-        Supplier<List<String>> listSupplier = ArrayList::new;
-        List<String> newList = listSupplier.get(); // creates a fresh ArrayList
-        newList.add("Java");
-        System.out.println(newList); // [Java]
+        // Method reference — same intent, less ceremony
+        var refNames = products.stream()
+                .map(Product::name)   // reads as "the name of a Product"
+                .toList();
 
-        // Output: 42
-        //         HELLO, WORLD!
-        //         [Alice, Bob, Charlie]
-        //         [Java]
+        // Both pipelines produce identical results
+        log.info("Lambda:    " + lambdaNames);
+        log.info("Reference: " + refNames);
+
+        // Instance method reference on a particular object
+        String prefix = "Item: ";
+        var prefixed = products.stream()
+                .map(p -> prefix.concat(p.name()))  // lambda form
+                .toList();
+        log.info("Prefixed:  " + prefixed);
+
+        // Static method reference — Double::parseDouble as a transformer
+        var priceStrings = List.of("9.99", "19.99", "4.49");
+        var prices = priceStrings.stream()
+                .map(Double::parseDouble)   // reference to static method
+                .toList();
+        log.info("Prices:    " + prices);
+
+        // Output:
+        // Lambda:    [Keyboard, Monitor, Mouse]
+        // Reference: [Keyboard, Monitor, Mouse]
+        // Prefixed:  [Item: Keyboard, Item: Monitor, Item: Mouse]
+        // Prices:    [9.99, 19.99, 4.49]
     }
 }
