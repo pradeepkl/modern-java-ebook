@@ -1,9 +1,12 @@
-// Java 8+
+// Java 25+
+// Feature shown: compact source files and instance main methods, final in Java 25+
+
 /**
  * Listing 13.1 — ImperativeVsDeclarative.java
- * Demonstrates: Imperative iteration vs declarative removeIf
+ * Demonstrates: Imperative iterator-based removal vs declarative removeIf
  * Chapter 13: Declarative Data Transformations
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter13;
 
@@ -17,49 +20,46 @@ public class ImperativeVsDeclarative {
     private static final Logger LOG =
             Logger.getLogger(ImperativeVsDeclarative.class.getName());
 
-    // Simple record to represent an order with a status
     record Order(String id, String status) {}
 
-    public static void main(String[] args) {
+    void main() {
 
-        // Seed data: mix of CONFIRMED and PENDING orders
+        // Build a mutable list of orders with mixed statuses
         List<Order> imperativeOrders = new ArrayList<>(List.of(
                 new Order("A1", "CONFIRMED"),
                 new Order("A2", "PENDING"),
                 new Order("A3", "CONFIRMED"),
-                new Order("A4", "CANCELLED"),
-                new Order("A5", "CONFIRMED")
+                new Order("A4", "CANCELLED")
         ));
 
         // NOT IDEAL: Imperative — mechanics dominate intent
-        // Must manage cursor, advancement, and removal explicitly
+        // The developer manages cursor, test, and removal explicitly
         Iterator<Order> it = imperativeOrders.iterator();
         while (it.hasNext()) {
-            Order order = it.next();          // manually advance
+            Order order = it.next();
             if (!order.status().equals("CONFIRMED")) {
-                it.remove();                  // manually remove via iterator
+                it.remove(); // manual removal via iterator
             }
         }
 
-        LOG.info("Imperative result: " + imperativeOrders);
+        LOG.info("After imperative removal: " + imperativeOrders);
 
-        // Reset data for declarative example
+        // Build a second identical list for the declarative approach
         List<Order> declarativeOrders = new ArrayList<>(List.of(
                 new Order("A1", "CONFIRMED"),
                 new Order("A2", "PENDING"),
                 new Order("A3", "CONFIRMED"),
-                new Order("A4", "CANCELLED"),
-                new Order("A5", "CONFIRMED")
+                new Order("A4", "CANCELLED")
         ));
 
         // Declarative — intent is the code
-        // removeIf expresses WHAT to remove, not HOW to iterate
+        // removeIf expresses what to remove, not how to iterate
         declarativeOrders.removeIf(o -> !o.status().equals("CONFIRMED"));
 
-        LOG.info("Declarative result: " + declarativeOrders);
+        LOG.info("After declarative removeIf: " + declarativeOrders);
 
         // Output:
-        // Imperative result: [Order[id=A1, status=CONFIRMED], Order[id=A3, status=CONFIRMED], Order[id=A5, status=CONFIRMED]]
-        // Declarative result: [Order[id=A1, status=CONFIRMED], Order[id=A3, status=CONFIRMED], Order[id=A5, status=CONFIRMED]]
+        // After imperative removal: [Order[id=A1, status=CONFIRMED], Order[id=A3, status=CONFIRMED]]
+        // After declarative removeIf: [Order[id=A1, status=CONFIRMED], Order[id=A3, status=CONFIRMED]]
     }
 }
