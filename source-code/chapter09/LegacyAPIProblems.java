@@ -1,9 +1,13 @@
-// Java 8+
+// Java 25+
+// Feature shown: legacy date/time API problems (Date, Calendar, SimpleDateFormat), final in Java 1.1+
+
 /**
  * Listing 9.2 — LegacyAPIProblems.java
- * Demonstrates: Problems with java.util.Date, Calendar, and SimpleDateFormat
+ * Demonstrates: Mutability of Date, zero-indexed months in Calendar,
+ *               and thread-unsafety of SimpleDateFormat
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
@@ -14,50 +18,51 @@ import java.util.logging.Logger;
 
 public class LegacyAPIProblems {
 
-    private static final Logger LOG = Logger.getLogger(LegacyAPIProblems.class.getName());
+    private static final Logger LOG =
+            Logger.getLogger(LegacyAPIProblems.class.getName());
 
-    public static void main(String[] args) {
+    void main() {
 
-        // Problem 1: Date is mutable — aliasing causes silent corruption
-        Date orderDate = new Date();
-        Date reference = orderDate; // both point to same object
-        LOG.info("Before mutation: " + orderDate);
-
-        reference.setTime(0); // modifies orderDate too — silent corruption
-        LOG.info("After reference.setTime(0): " + orderDate);
+        // Problem 1: Date is mutable
+        // Any code holding a reference can change
+        // the date out from under you
+        Date orderDate = new Date(1_700_000_000_000L); // a fixed timestamp
+        Date reference = orderDate;
+        reference.setTime(0); // modifies orderDate too
         // orderDate is now 1970-01-01 — corrupted silently
-        LOG.info("Same object? " + (orderDate == reference)); // true
+        LOG.info("orderDate after mutation via reference: " + orderDate);
+        // Both variables point to the same object — mutation is invisible
 
-        // Problem 2: Calendar months are zero-indexed — January is 0
+        // Problem 2: Calendar API is confusing
+        // Months are zero-indexed — January is 0
         Calendar cal = Calendar.getInstance();
-        cal.set(2024, 0, 15); // 0 = January — not December (11)
-        LOG.info("Calendar month 0 = January: " + cal.getTime());
-
-        cal.set(2024, 11, 15); // 11 = December — confusing but correct
-        LOG.info("Calendar month 11 = December: " + cal.getTime());
+        cal.set(2024, 0, 15); // January 15 — NOT December 15
+        // Every developer has been burned by this once
+        int month = cal.get(Calendar.MONTH); // returns 0, not 1
+        LOG.info("Calendar month for January: " + month
+                + " (zero-indexed — 0 means January)");
 
         // Problem 3: SimpleDateFormat is NOT thread-safe
-        // Sharing across threads causes unpredictable output or exceptions
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        // NEVER share this instance across threads
-        // Each thread must create its own instance
-        // Prefer java.time.format.DateTimeFormatter — immutable and thread-safe
+        // Sharing a formatter across threads causes
+        // unpredictable output or exceptions
+        SimpleDateFormat formatter =
+                new SimpleDateFormat("yyyy-MM-dd");
+        // NEVER share this across threads
+        // Each thread needs its own instance
+        // Or use DateTimeFormatter (thread-safe)
         try {
-            String formatted = formatter.format(new Date(0)); // epoch
-            LOG.info("Formatted epoch (single thread, safe here): " + formatted);
+            String formatted = formatter.format(new Date(0));
+            LOG.info("Formatted epoch: " + formatted);
         } catch (Exception e) {
             LOG.warning("Formatting failed: " + e.getMessage());
         }
 
-        LOG.info("Use java.time.LocalDate, ZonedDateTime, DateTimeFormatter instead.");
+        LOG.info("Use java.time.LocalDate, ZonedDateTime, and DateTimeFormatter instead");
 
         // Output:
-        // Before mutation: <current date>
-        // After reference.setTime(0): Thu Jan 01 05:30:00 IST 1970
-        // Same object? true
-        // Calendar month 0 = January: Mon Jan 15 ...
-        // Calendar month 11 = December: Sun Dec 15 ...
-        // Formatted epoch (single thread, safe here): 1970-01-01
-        // Use java.time.LocalDate, ZonedDateTime, DateTimeFormatter instead.
+        // orderDate after mutation via reference: Thu Jan 01 05:30:00 IST 1970
+        // Calendar month for January: 0 (zero-indexed — 0 means January)
+        // Formatted epoch: 1970-01-01
+        // Use java.time.LocalDate, ZonedDateTime, and DateTimeFormatter instead
     }
 }
