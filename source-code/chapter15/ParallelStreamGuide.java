@@ -32,37 +32,35 @@ public class ParallelStreamGuide {
     void main() throws Exception {
         List<Order> largeOrderList = getLargeOrderList();
 
-        // NOT IDEAL: unsafe — shared mutable ArrayList with parallel stream
-        // forEach on a parallel stream causes race conditions on ArrayList
+        // NOT IDEAL: unsafe — shared mutable ArrayList, race condition risk
         List<Order> unsafeResult = new ArrayList<>();
         largeOrderList.parallelStream()
                 .filter(o -> o.amount() > 100.0)
-                .forEach(unsafeResult::add); // race condition — size may be wrong
+                .forEach(unsafeResult::add); // race condition: size may be wrong
         LOG.info("Unsafe result size (may vary): " + unsafeResult.size());
 
         // Safe — toList() collector is thread-safe
         List<Order> safeResult = largeOrderList.parallelStream()
                 .filter(o -> o.amount() > 100.0)
-                .toList(); // thread-safe terminal operation
-        LOG.info("Safe result size (consistent): " + safeResult.size());
+                .toList(); // always correct
+        LOG.info("Safe result size: " + safeResult.size());
 
         // Custom ForkJoinPool — isolate parallelism from the common pool
-        // Useful when the common pool is shared with other concurrent work
-        ForkJoinPool customPool = new ForkJoinPool(4); // 4 worker threads
+        ForkJoinPool customPool = new ForkJoinPool(4);
         try {
             double total = customPool.submit(() ->
                     largeOrderList.parallelStream()
                             .mapToDouble(Order::amount)
                             .sum()
-            ).get(); // blocks until the parallel sum completes
+            ).get(); // blocks until complete
             LOG.info("Total amount via custom pool (4 threads): " + total);
         } finally {
-            customPool.shutdown(); // always release the custom pool
+            customPool.shutdown(); // always release custom pool resources
         }
 
         // Output:
-        // Unsafe result size (may vary): [some value, possibly incorrect]
-        // Safe result size (consistent): 199800
+        // Unsafe result size (may vary): <some value, possibly incorrect>
+        // Safe result size: 199799
         // Total amount via custom pool (4 threads): 1.000005E10
     }
 }
