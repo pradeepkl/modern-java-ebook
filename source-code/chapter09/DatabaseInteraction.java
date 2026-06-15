@@ -1,24 +1,30 @@
-// Java 8+
-/**
- * Listing 9.11 — DatabaseInteraction.java
- * Demonstrates: Correct Java time types for database column mapping
- * Chapter 9: Modern Date and Time
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: java.time types with JPA (LocalDate, Instant, OffsetDateTime), final in Java 8+
+
 package chapter09;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.logging.Logger;
 
+/**
+ * Listing 9.11 — DatabaseInteraction.java
+ * Demonstrates: Correct java.time types for database persistence columns.
+ * LocalDate maps to SQL DATE, Instant maps to SQL TIMESTAMP WITH TIME ZONE,
+ * OffsetDateTime preserves the exact UTC offset for audit columns.
+ * Chapter 9: Modern Date and Time
+ * Requires: Java 8+ for java.time types; void main() requires Java 25+
+ * (compiled with --enable-preview --release 21 for the void main() instance
+ * main method)
+ */
 public class DatabaseInteraction {
 
-    private static final Logger log = Logger.getLogger(DatabaseInteraction.class.getName());
+    private static final Logger log =
+            Logger.getLogger(DatabaseInteraction.class.getName());
 
-    // Simulates an Order entity with correct date-time field types
+    // Simulates a JPA entity — no jakarta.persistence on classpath needed
     static class Order {
 
         private String orderId;
@@ -29,48 +35,55 @@ public class DatabaseInteraction {
         // Instant maps to SQL TIMESTAMP WITH TIME ZONE — stored as UTC
         private Instant createdAt;
 
-        // OffsetDateTime — explicit offset stored with value, good for audit columns
+        // OffsetDateTime — explicit offset stored with value
+        // Good for audit columns where the exact offset matters
         private OffsetDateTime lastModifiedAt;
 
-        // LocalDateTime — WRONG for timestamps: no timezone, ambiguous when read back
+        // LocalDateTime would be WRONG here — no timezone, ambiguous on read-back
         // private LocalDateTime createdAt; // DO NOT DO THIS
 
-        Order(String orderId, LocalDate deliveryDate, Instant createdAt, OffsetDateTime lastModifiedAt) {
+        Order(String orderId,
+              LocalDate deliveryDate,
+              Instant createdAt,
+              OffsetDateTime lastModifiedAt) {
             this.orderId = orderId;
             this.deliveryDate = deliveryDate;
             this.createdAt = createdAt;
             this.lastModifiedAt = lastModifiedAt;
         }
 
-        // Display createdAt in a user's local timezone — presentation concern only
-        String createdAtInZone(ZoneId zone) {
-            return createdAt.atZone(zone).toString();
+        @Override
+        public String toString() {
+            return "Order{id=" + orderId
+                    + ", deliveryDate=" + deliveryDate
+                    + ", createdAt=" + createdAt
+                    + ", lastModifiedAt=" + lastModifiedAt + "}";
         }
     }
 
-    public static void main(String[] args) {
-        LocalDate delivery = LocalDate.of(2024, 9, 15);          // SQL DATE
-        Instant created = Instant.parse("2024-06-18T10:30:00Z"); // UTC instant
-        OffsetDateTime modified = OffsetDateTime.of(             // explicit offset
-                2024, 6, 18, 12, 30, 0, 0, ZoneOffset.ofHours(2));
+    void main() {
+        // LocalDate — date only, no time, maps to SQL DATE
+        LocalDate delivery = LocalDate.of(2024, 7, 15);
+
+        // Instant — UTC timestamp, maps to SQL TIMESTAMP WITH TIME ZONE
+        Instant created = Instant.parse("2024-06-18T09:30:00Z");
+
+        // OffsetDateTime — timestamp with explicit offset, good for audit trails
+        OffsetDateTime modified = OffsetDateTime.of(
+                2024, 6, 18, 11, 45, 0, 0, ZoneOffset.ofHours(2));
 
         Order order = new Order("ORD-001", delivery, created, modified);
 
-        log.info("Order ID      : " + order.orderId);
-        log.info("Delivery Date : " + order.deliveryDate);       // SQL DATE
-        log.info("Created At    : " + order.createdAt);          // UTC stored
-        log.info("Last Modified : " + order.lastModifiedAt);     // offset preserved
-
-        // Display UTC instant in different timezones — UI layer concern
-        log.info("Created (NYC) : " + order.createdAtInZone(ZoneId.of("America/New_York")));
-        log.info("Created (IST) : " + order.createdAtInZone(ZoneId.of("Asia/Kolkata")));
+        log.info("Persisted order: " + order);
+        log.info("deliveryDate type: LocalDate  -> SQL DATE (no time component)");
+        log.info("createdAt type:    Instant    -> SQL TIMESTAMP WITH TIME ZONE (UTC)");
+        log.info("lastModifiedAt:    OffsetDateTime -> preserves exact UTC offset");
 
         // Output:
-        // Order ID      : ORD-001
-        // Delivery Date : 2024-09-15
-        // Created At    : 2024-06-18T10:30:00Z
-        // Last Modified : 2024-06-18T12:30:00+02:00
-        // Created (NYC) : 2024-06-18T06:30-04:00[America/New_York]
-        // Created (IST) : 2024-06-18T16:00+05:30[Asia/Kolkata]
+        // Persisted order: Order{id=ORD-001, deliveryDate=2024-07-15,
+        //   createdAt=2024-06-18T09:30:00Z, lastModifiedAt=2024-06-18T11:45+02:00}
+        // deliveryDate type: LocalDate  -> SQL DATE (no time component)
+        // createdAt type:    Instant    -> SQL TIMESTAMP WITH TIME ZONE (UTC)
+        // lastModifiedAt:    OffsetDateTime -> preserves exact UTC offset
     }
 }
