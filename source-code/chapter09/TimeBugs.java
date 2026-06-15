@@ -54,9 +54,9 @@ public class TimeBugs {
 
         // Bug 3: Hardcoded UTC offset — wrong for London half the year
         ZoneOffset hardcoded = ZoneOffset.of("+01:00");
-        LOG.info("Hardcoded offset (ignores DST rules): " + hardcoded);
+        LOG.info("Hardcoded offset (ignores DST): " + hardcoded);
 
-        // Correct: ZoneId knows DST rules for the named region
+        // Correct: ZoneId encodes DST rules for the named region
         ZoneId london = ZoneId.of("Europe/London");
         LOG.info("Named zone (DST-aware): " + london);
 
@@ -65,7 +65,7 @@ public class TimeBugs {
         // Unambiguous audit instant (UTC): 2024-06-18T08:30:00.123456Z
         // Appointment as Instant (loses DST context): 2024-06-18T08:30:00.123456Z
         // Appointment as ZonedDateTime (DST-aware): 2024-06-18T14:00+05:30[Asia/Kolkata]
-        // Hardcoded offset (ignores DST rules): +01:00
+        // Hardcoded offset (ignores DST): +01:00
         // Named zone (DST-aware): Europe/London
     }
 }
