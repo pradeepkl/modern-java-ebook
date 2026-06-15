@@ -38,7 +38,10 @@ Canonical modules: order-api, order-impl, billing, payment-api, payment-stripe, 
 - Listing 5.11 — `chapter05/modules/billing/examples/listing-5.11-requires-transitive-billing/module-info.java`
 - Listing 5.12 — `chapter05/modules/order-impl/examples/listing-5.12-exports-vs-opens/module-info.java`
 - Listing 5.14 — `chapter05/modules/order-impl/examples/listing-5.14-broad-opens/module-info.java`
+- Listing 5.15 — `chapter05/modules/order-impl/src/main/java/com/domain/order/impl/OrderValidator.java`
 - Listing 5.16 — `chapter05/modules/payment-api/src/main/java/com/domain/payment/api/PaymentProcessor.java`
+- Listing 5.16a — `chapter05/modules/payment-api/src/main/java/com/domain/payment/api/PaymentRequest.java`
+- Listing 5.16b — `chapter05/modules/payment-api/src/main/java/com/domain/payment/api/PaymentResult.java`
 - Listing 5.17 — `chapter05/modules/payment-api/src/main/java/module-info.java`
 - Listing 5.18 — `chapter05/modules/payment-stripe/src/main/java/com/domain/payment/stripe/StripeProcessor.java`
 - Listing 5.19 — `chapter05/modules/payment-stripe/src/main/java/module-info.java`
