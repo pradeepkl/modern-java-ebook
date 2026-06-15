@@ -1,19 +1,22 @@
-// Java 8+
+// Java 25+
+// Feature shown: composition with functional interfaces, final in Java 8+
+
 /**
  * Listing 3.2 — CompositionOverInheritance.java
- * Demonstrates: Composition over inheritance using functional interfaces
+ * Demonstrates: composition with functional interfaces to replace fragile inheritance
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
-// Functional interface representing a pluggable withdrawal policy
+import java.util.logging.Logger;
+
 @FunctionalInterface
 interface WithdrawalPolicy {
     boolean canWithdraw(double balance, double amount);
 }
 
-// Account holds state only — no behavioral assumptions baked in
 class Account {
     private double balance;
 
@@ -26,14 +29,13 @@ class Account {
     }
 
     void debit(double amount) {
-        balance -= amount; // Reduces balance unconditionally
+        balance -= amount;
     }
 }
 
-// Composed class: combines Account (state) with WithdrawalPolicy (behavior)
 class WithdrawableAccount {
     private final Account account;
-    private final WithdrawalPolicy policy; // Behavior injected, not inherited
+    private final WithdrawalPolicy policy;
 
     public WithdrawableAccount(Account account, WithdrawalPolicy policy) {
         this.account = account;
@@ -41,38 +43,58 @@ class WithdrawableAccount {
     }
 
     public void withdraw(double amount) {
-        if (amount <= 0) throw new IllegalArgumentException("Invalid amount");
-        if (!policy.canWithdraw(account.balance(), amount))
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Invalid amount");
+        }
+        if (!policy.canWithdraw(account.balance(), amount)) {
             throw new IllegalStateException("Insufficient balance");
+        }
         account.debit(amount);
-        System.out.printf("Withdrew %.0f — balance now %.0f%n", amount, account.balance());
+    }
+
+    public double balance() {
+        return account.balance();
     }
 }
 
 public class CompositionOverInheritance {
-    public static void main(String[] args) {
-        // Different policies expressed as lambdas — no subclassing needed
-        WithdrawalPolicy noOverdraft       = (balance, amount) -> amount <= balance;
-        WithdrawalPolicy overdraftUpTo1000 = (balance, amount) -> amount <= balance + 1000;
 
+    private static final Logger LOG =
+            Logger.getLogger(CompositionOverInheritance.class.getName());
+
+    void main() {
+        // Policies expressed as lambdas — behavior is explicit and swappable
+        WithdrawalPolicy noOverdraft =
+                (balance, amount) -> amount <= balance;
+
+        WithdrawalPolicy overdraftUpTo1000 =
+                (balance, amount) -> amount <= balance + 1000;
+
+        // Account holds state only — no behavioral assumptions baked in
         Account baseAccount = new Account(500);
+        Account overdraftBase = new Account(500);
 
-        // Same state, different behavior — composed at construction time
-        WithdrawableAccount regularAccount  = new WithdrawableAccount(new Account(500), noOverdraft);
-        WithdrawableAccount overdraftAccount = new WithdrawableAccount(baseAccount, overdraftUpTo1000);
+        WithdrawableAccount regularAccount =
+                new WithdrawableAccount(baseAccount, noOverdraft);
 
-        // Regular account rejects overdraft
+        WithdrawableAccount overdraftAccount =
+                new WithdrawableAccount(overdraftBase, overdraftUpTo1000);
+
+        // Regular account rejects withdrawal exceeding balance
         try {
-            regularAccount.withdraw(600); // Exceeds balance of 500
+            regularAccount.withdraw(600); // Throws IllegalStateException
+            LOG.info("Regular account withdrew 600");
         } catch (IllegalStateException e) {
-            System.out.println("Regular account: " + e.getMessage()); // Insufficient balance
+            LOG.info("Regular account blocked: " + e.getMessage());
         }
 
-        // Overdraft account allows withdrawal within overdraft limit
-        overdraftAccount.withdraw(600); // balance=500, overdraft allows up to 1500
+        // Overdraft account permits withdrawal within overdraft limit
+        overdraftAccount.withdraw(600); // Succeeds
+        LOG.info("Overdraft account balance after 600 withdrawal: "
+                + overdraftAccount.balance());
 
         // Output:
-        // Regular account: Insufficient balance
-        // Withdrew 600 — balance now -100
+        // Regular account blocked: Insufficient balance
+        // Overdraft account balance after 600 withdrawal: -100.0
     }
 }
