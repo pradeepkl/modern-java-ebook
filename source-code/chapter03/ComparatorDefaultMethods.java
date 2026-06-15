@@ -1,54 +1,49 @@
-// Java 8+
+// Java 25+
+// Feature shown: Comparator default methods (thenComparing), final in Java 8+
+
 /**
  * Listing 3.6 — ComparatorDefaultMethods.java
- * Demonstrates: Comparator default methods (thenComparing) and Iterable forEach
+ * Demonstrates: Comparator.thenComparing as a default method enabling chained
+ * sort criteria without breaking existing Comparator implementations.
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ComparatorDefaultMethods {
 
-    public static void main(String[] args) {
+    private static final Logger LOG =
+            Logger.getLogger(ComparatorDefaultMethods.class.getName());
 
+    void main() {
         List<String> names = Arrays.asList("John", "Alice", "Bob", "Alice");
 
         // thenComparing is a default method on Comparator (Java 8+)
         // Sorts by name length first, then alphabetically for equal lengths
         names.sort(
-            Comparator.comparingInt(String::length)   // primary: sort by length
-                      .thenComparing(Comparator.naturalOrder()) // secondary: alphabetical
+            Comparator.comparingInt(String::length)
+                      .thenComparing(Comparator.naturalOrder())
         );
 
-        // Prints sorted list: shortest first, ties broken alphabetically
-        System.out.println(names);
-        // Output: [Bob, John, Alice, Alice]
+        // Expected: [Bob, John, Alice, Alice] — length then alpha
+        LOG.info("Sorted list: " + names);
 
-        // forEach is a default method on Iterable (Java 8+)
-        // filter() and forEach() are default/intermediate methods on Stream
+        // forEach on Iterable is also a default method (Java 8+)
+        // Filters names longer than 3 characters and logs each
         names.stream()
-             .filter(n -> n.length() > 3)   // keep names longer than 3 chars
-             .forEach(System.out::println);  // method reference as Consumer
-        // Output:
-        // John
-        // Alice
-        // Alice
+             .filter(n -> n.length() > 3)
+             .forEach(name -> LOG.info("Name longer than 3 chars: " + name));
 
-        // Demonstrating reversed() — another Comparator default method
-        System.out.println("\nReversed order:");
-        names.stream()
-             .sorted(Comparator.comparingInt(String::length)
-                               .thenComparing(Comparator.naturalOrder())
-                               .reversed()) // reversed() is also a default method
-             .forEach(System.out::println);
         // Output:
-        // Alice
-        // Alice
-        // John
-        // Bob
+        // Sorted list: [Bob, John, Alice, Alice]
+        // Name longer than 3 chars: John
+        // Name longer than 3 chars: Alice
+        // Name longer than 3 chars: Alice
     }
 }
