@@ -66,7 +66,7 @@ public class HumanVsMachineTime {
         // Opening:     09:00
         // Appointment: 2024-06-18T15:00
         // Payment processed: 2024-06-18T10:15:30.123456789Z
-        // Record created:    2024-06-18T10:15:30.123456790Z
+        // Record created:    2024-06-18T10:15:30.234567890Z
         // Message sent:      2024-06-18T10:15:30Z
     }
 }
