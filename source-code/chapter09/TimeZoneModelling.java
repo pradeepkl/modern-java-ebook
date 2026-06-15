@@ -1,63 +1,69 @@
-// Java 8+
+// Java 25+
+// Feature shown: ZoneId, ZonedDateTime, withZoneSameInstant, final in Java 8+
+
 /**
  * Listing 9.6 — TimeZoneModelling.java
- * Demonstrates: ZoneId, ZonedDateTime, cross-zone conversion, and Instant round-trip
+ * Demonstrates: ZoneId, ZonedDateTime, and withZoneSameInstant for
+ * converting a meeting time across multiple time zones
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 
 public class TimeZoneModelling {
 
     private static final Logger LOG = Logger.getLogger(TimeZoneModelling.class.getName());
 
-    public static void main(String[] args) {
+    void main() {
 
         // ZoneId — identifies a time zone by its IANA name
-        ZoneId kolkata = ZoneId.of("Asia/Kolkata");       // UTC+5:30, no DST
-        ZoneId london  = ZoneId.of("Europe/London");      // UTC+0 / BST UTC+1
-        ZoneId newYork = ZoneId.of("America/New_York");   // EST UTC-5 / EDT UTC-4
-        ZoneId utc     = ZoneId.of("UTC");                // always UTC+0
+        ZoneId kolkata = ZoneId.of("Asia/Kolkata");
+        ZoneId london  = ZoneId.of("Europe/London");
+        ZoneId newYork = ZoneId.of("America/New_York");
+        ZoneId utc     = ZoneId.of("UTC");
 
-        // ZonedDateTime — a specific moment anchored to a full timezone rule set
+        // ZonedDateTime — a specific moment in a specific zone
         ZonedDateTime meetingInMumbai = ZonedDateTime.of(
-                2024, 6, 18, 14, 0, 0, 0, kolkata);      // 14:00 IST
+                2024, 6, 18, 14, 0, 0, 0, kolkata);
 
-        // Convert to other zones — same instant, different local display
-        ZonedDateTime meetingInLondon  = meetingInMumbai.withZoneSameInstant(london);
-        ZonedDateTime meetingInNewYork = meetingInMumbai.withZoneSameInstant(newYork);
-        ZonedDateTime meetingInUtc     = meetingInMumbai.withZoneSameInstant(utc);
+        // Convert to other zones — same instant, different display
+        ZonedDateTime meetingInLondon  = meetingInMumbai
+                .withZoneSameInstant(london);   // IST is UTC+5:30, BST is UTC+1
+        ZonedDateTime meetingInNewYork = meetingInMumbai
+                .withZoneSameInstant(newYork);  // New York EDT is UTC-4
 
-        LOG.info("Mumbai  : " + meetingInMumbai);   // 14:00+05:30
-        LOG.info("London  : " + meetingInLondon);   // 09:30+01:00[BST]
-        LOG.info("New York: " + meetingInNewYork);  // 04:30-04:00[EDT]
-        LOG.info("UTC     : " + meetingInUtc);      // 08:30Z
+        ZonedDateTime meetingInUtc = meetingInMumbai
+                .withZoneSameInstant(utc);      // Canonical UTC representation
 
-        // Store as UTC Instant — timezone context stripped, pure point in time
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern(
+                "yyyy-MM-dd HH:mm z (OOOO)");
+
+        LOG.info("Mumbai  : " + meetingInMumbai.format(fmt));
+        LOG.info("London  : " + meetingInLondon.format(fmt));
+        LOG.info("New York: " + meetingInNewYork.format(fmt));
+        LOG.info("UTC     : " + meetingInUtc.format(fmt));
+
+        // Store as UTC Instant — the canonical machine representation
         Instant asInstant = meetingInMumbai.toInstant();
-        LOG.info("As Instant (UTC): " + asInstant); // 2024-06-18T08:30:00Z
+        LOG.info("As Instant (UTC): " + asInstant);
 
-        // Reconstruct for any viewer's timezone from the stored Instant
+        // Reconstruct for any viewer's timezone from the same Instant
         ZonedDateTime forViewer = asInstant.atZone(kolkata);
-        LOG.info("Reconstructed for Kolkata viewer: " + forViewer);
-
-        // Demonstrate that all three ZonedDateTimes represent the same instant
-        boolean sameInstant = meetingInMumbai.toInstant()
-                .equals(meetingInLondon.toInstant());
-        LOG.info("Mumbai and London represent same instant: " + sameInstant); // true
+        LOG.info("Reconstructed for Kolkata viewer: " + forViewer.format(fmt));
 
         // Output:
-        // Mumbai  : 2024-06-18T14:00+05:30[Asia/Kolkata]
-        // London  : 2024-06-18T09:30+01:00[Europe/London]
-        // New York: 2024-06-18T04:30-04:00[America/New_York]
-        // UTC     : 2024-06-18T08:30Z
+        // Mumbai  : 2024-06-18 14:00 IST (GMT+05:30)
+        // London  : 2024-06-18 09:30 BST (GMT+01:00)
+        // New York: 2024-06-18 04:30 EDT (GMT-04:00)
+        // UTC     : 2024-06-18 08:30 UTC (GMT)
         // As Instant (UTC): 2024-06-18T08:30:00Z
-        // Reconstructed for Kolkata viewer: 2024-06-18T14:00+05:30[Asia/Kolkata]
-        // Mumbai and London represent same instant: true
+        // Reconstructed for Kolkata viewer: 2024-06-18 14:00 IST (GMT+05:30)
     }
 }
