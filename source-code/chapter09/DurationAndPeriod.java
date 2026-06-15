@@ -5,7 +5,7 @@
  * Listing 9.7 — DurationAndPeriod.java
  * Demonstrates: Duration for machine elapsed time and Period for calendar elapsed time
  * Chapter 9: Modern Date and Time
- * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * Requires: Java 8+ (compiled with --enable-preview --release 21 for
  * the void main() instance main method)
  */
 package chapter09;
@@ -34,7 +34,7 @@ public class DurationAndPeriod {
         LOG.info("Elapsed seconds: " + seconds);
         LOG.info("Elapsed nanos:   " + nanos);
 
-        // Duration arithmetic — combining two durations
+        // Duration arithmetic — combine two durations
         Duration timeout    = Duration.ofSeconds(30);
         Duration retryDelay = Duration.ofMillis(500);
         Duration totalWait  = timeout.plus(retryDelay); // 30.5 seconds
@@ -55,11 +55,13 @@ public class DurationAndPeriod {
 
         LOG.info("Renewal date: " + renewalDate); // 2025-07-15
 
-        // Key distinction logged for clarity:
-        // Duration.ofDays(30) is always exactly 30 x 24 hours
-        // Period.ofMonths(1) varies — Jan=31 days, Feb=28/29, Jun=30
+        // Key distinction:
+        // Duration.ofDays(30) is always 30 x 24 hours (fixed machine time)
+        // Period.ofMonths(1) varies — Jan has 31 days, Feb 28 or 29, Jun 30
+        // Use Period when calendar semantics matter
         LOG.info("Duration 30 days in hours: " + Duration.ofDays(30).toHours()); // 720
-        LOG.info("Use Period when calendar semantics matter");
+        LOG.info("Period 1 month days (from Jan 15): " +
+                LocalDate.of(2024, 1, 15).plus(Period.ofMonths(1))); // 2024-02-15
 
         // Output:
         // Elapsed millis:  1500
@@ -69,6 +71,6 @@ public class DurationAndPeriod {
         // Subscription months: 6
         // Renewal date: 2025-07-15
         // Duration 30 days in hours: 720
-        // Use Period when calendar semantics matter
+        // Period 1 month days (from Jan 15): 2024-02-15
     }
 }
