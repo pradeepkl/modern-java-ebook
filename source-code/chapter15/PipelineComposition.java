@@ -2,7 +2,7 @@
 // Feature shown: stream pipeline composition, final in Java 8+
 /**
  * Listing 15.11 — PipelineComposition.java
- * Demonstrates: Composing stream pipelines via method return values,
+ * Demonstrates: composing stream pipelines via method return values,
  *               parameterised predicates, and multi-level transformations
  * Chapter 15: Streams: Orchestrating Pipelines
  * Requires: Java 25+ (compiled with --enable-preview --release 21 for
@@ -49,7 +49,7 @@ public class PipelineComposition {
                         Collectors.summingDouble(Order::amount)));
     }
 
-    // Multi-level transformation: raw orders -> grouped -> RegionReport list
+    // Multi-level transformation: raw orders -> regional summary report
     static List<RegionReport> buildRegionalReport(List<Order> orders) {
         return orders.stream()
                 .filter(o -> o.status().equals("CONFIRMED"))
@@ -61,7 +61,8 @@ public class PipelineComposition {
                     long count = regionOrders.size();
                     double total = regionOrders.stream()
                             .mapToDouble(Order::amount).sum();
-                    return new RegionReport(region, count, total, total / count);
+                    double average = total / count;
+                    return new RegionReport(region, count, total, average);
                 })
                 .sorted(Comparator.comparingDouble(RegionReport::total).reversed())
                 .toList();
@@ -77,9 +78,9 @@ public class PipelineComposition {
 
         List<RegionReport> report = buildRegionalReport(orders);
 
-        // Log each regional summary in descending total order
-        report.forEach(r -> log.info(r.region()
-                + " | count=" + r.count()
+        // Log each regional summary line
+        report.forEach(r -> log.info(
+                r.region() + " | count=" + r.count()
                 + " | total=" + r.total()
                 + " | avg=" + r.average()));
 
