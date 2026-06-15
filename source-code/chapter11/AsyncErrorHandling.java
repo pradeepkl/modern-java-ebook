@@ -1,4 +1,12 @@
-// Java 8+
+// Java 25+
+// Feature shown: exceptionally, handle, and whenComplete error handling, final in Java 8+
+/**
+ * Listing 11.7 — AsyncErrorHandling.java
+ * Demonstrates: exceptionally, handle, and whenComplete for async error handling
+ * Chapter 11: Declarative and Structured Concurrency
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 package chapter11;
 
 import java.util.concurrent.CompletableFuture;
@@ -7,31 +15,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-/**
- * Listing 11.7 — AsyncErrorHandling.java
- * Demonstrates: Error handling in async pipelines using exceptionally,
- *               handle, and whenComplete on CompletableFuture
- * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 8+
- */
 public class AsyncErrorHandling {
 
     private static final Logger log =
             Logger.getLogger(AsyncErrorHandling.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        // Cast supplier to typed form so exceptionally infers String
-        CompletableFuture<String> failing =
+        // exceptionally — recover from failure with a fallback value
+        // only invoked when the upstream stage completes exceptionally
+        // Cast supplyAsync to CompletableFuture<String> to fix type inference
+        CompletableFuture<String> withRecovery =
                 CompletableFuture.<String>supplyAsync(() -> {
                     throw new RuntimeException("Payment gateway unavailable");
-                }, executor);
-
-        // exceptionally — recover from failure with a fallback value
-        // Only invoked when the upstream stage completes exceptionally
-        CompletableFuture<String> withRecovery = failing
+                }, executor)
                 .exceptionally(ex -> {
                     log.warning("Recovering from: " + ex.getMessage());
                     return "fallback-response"; // substitute value on failure
@@ -39,12 +38,11 @@ public class AsyncErrorHandling {
 
         log.info("Recovery result: " + withRecovery.get());
 
-        // handle — called on both success and failure
-        // provides access to both result and exception simultaneously
+        // handle — invoked on both success and failure
+        // receives (result, exception); exactly one will be non-null
         CompletableFuture<String> withHandle =
                 CompletableFuture.supplyAsync(
-                        () -> "order-processed",
-                        executor)
+                        () -> "order-processed", executor)
                 .handle((result, ex) -> {
                     if (ex != null) {
                         log.warning("Failed: " + ex.getMessage());
@@ -55,12 +53,11 @@ public class AsyncErrorHandling {
 
         log.info("Handle result: " + withHandle.get());
 
-        // whenComplete — called on both outcomes for side effects only
+        // whenComplete — invoked on both outcomes for side effects only
         // does not transform the result; passes it through unchanged
         CompletableFuture<String> withLogging =
                 CompletableFuture.supplyAsync(
-                        () -> "notification-sent",
-                        executor)
+                        () -> "notification-sent", executor)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.severe("Async failure: " + ex.getMessage());
