@@ -1,12 +1,17 @@
-// Java 8+
+// Java 25+
+// Feature shown: Map.merge for localised accumulation, final in Java 8+
+
 /**
  * Listing 13.11 — LocalisedMutation.java
- * Demonstrates: Localised mutation using Map.merge() vs shared mutable state
+ * Demonstrates: Localised mutation using Map.merge versus shared
+ * accumulation using getOrDefault/put in a manual loop.
  * Chapter 13: Declarative Data Transformations
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter13;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,32 +19,31 @@ import java.util.logging.Logger;
 
 public class LocalisedMutation {
 
-    private static final Logger log = Logger.getLogger(LocalisedMutation.class.getName());
+    private static final Logger log =
+            Logger.getLogger(LocalisedMutation.class.getName());
 
     record Order(String region, double amount) {}
 
-    public static void main(String[] args) {
+    void main() {
+        List<Order> orders = new ArrayList<>();
+        orders.add(new Order("UK", 99.99));
+        orders.add(new Order("US", 149.99));
+        orders.add(new Order("EU", 199.99));
+        orders.add(new Order("UK", 49.99));
+        orders.add(new Order("US", 79.99));
 
-        List<Order> orders = List.of(
-                new Order("UK",  49.99),
-                new Order("US",  99.99),
-                new Order("EU", 199.99),
-                new Order("UK",  99.99),
-                new Order("US", 129.99)
-        );
-
-        // NOT IDEAL: Shared accumulation — mutable state shared across
-        // the loop body and the temporary variable
+        // NOT IDEAL: shared accumulation — temporary variable scattered
+        // across getOrDefault and put; mutation is split across two lines
         Map<String, Double> imperativeTotals = new HashMap<>();
         for (Order order : orders) {
             double current = imperativeTotals
-                    .getOrDefault(order.region(), 0.0); // read scattered here
+                    .getOrDefault(order.region(), 0.0); // read
             imperativeTotals.put(order.region(),
-                    current + order.amount());           // write scattered here
+                    current + order.amount());          // write
         }
         log.info("Imperative totals: " + imperativeTotals);
 
-        // Correct approach: Localised — merge owns the accumulation entirely
+        // Correct approach: localised — merge owns the accumulation entirely
         // No temporary variable. No scattered getOrDefault/put.
         Map<String, Double> totals = new HashMap<>();
         orders.forEach(order ->
@@ -48,7 +52,15 @@ public class LocalisedMutation {
                         order.amount(),   // value if absent
                         Double::sum));    // merge function if present
 
-        log.info("Declarative totals: " + totals);
-        // Output: EU: 199.99, UK: 149.98, US: 229.98
+        // Log each region total in a stable order for readable output
+        totals.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(e -> log.info(e.getKey() + ": " + e.getValue()));
+
+        // Output:
+        // Imperative totals: {EU=199.99, UK=149.98, US=229.98}
+        // EU: 199.99
+        // UK: 149.98
+        // US: 229.98
     }
 }
