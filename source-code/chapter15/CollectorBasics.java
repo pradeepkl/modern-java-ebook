@@ -25,11 +25,11 @@ public class CollectorBasics {
 
     static List<Order> getOrders() {
         return List.of(
-            new Order("ORD-001", "C1", 250.0, "CONFIRMED", "NORTH"),
+            new Order("ORD-001", "C1", 150.0, "CONFIRMED", "NORTH"),
             new Order("ORD-002", "C2",  80.0, "PENDING",   "SOUTH"),
-            new Order("ORD-003", "C3", 175.0, "CONFIRMED", "NORTH"),
+            new Order("ORD-003", "C3", 200.0, "CONFIRMED", "NORTH"),
             new Order("ORD-004", "C4",  50.0, "CANCELLED", "EAST"),
-            new Order("ORD-005", "C5", 320.0, "CONFIRMED", "SOUTH")
+            new Order("ORD-005", "C5", 120.0, "CONFIRMED", "SOUTH")
         );
     }
 
@@ -75,7 +75,7 @@ public class CollectorBasics {
         // Output:
         // Confirmed orders: 3
         // Distinct regions: [NORTH, SOUTH, EAST]
-        // High-value orders: 3
+        // High-value orders: 4
         // Order IDs: ORD-001, ORD-002, ORD-003, ORD-004, ORD-005
         // Formatted: [ORD-001, ORD-002, ORD-003, ORD-004, ORD-005]
         // Confirmed count: 3
