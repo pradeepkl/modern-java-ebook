@@ -1,5 +1,5 @@
 // Java 25+
-// Feature shown: legacy date/time API problems (Date, Calendar, SimpleDateFormat), final in Java 1.1+
+// Feature shown: legacy date/time API problems (Date, Calendar, SimpleDateFormat), final in Java 1.0+
 
 /**
  * Listing 9.2 — LegacyAPIProblems.java
@@ -26,7 +26,7 @@ public class LegacyAPIProblems {
         // Problem 1: Date is mutable
         // Any code holding a reference can change
         // the date out from under you
-        Date orderDate = new Date(1_700_000_000_000L); // a fixed timestamp
+        Date orderDate = new Date();
         Date reference = orderDate;
         reference.setTime(0); // modifies orderDate too
         // orderDate is now 1970-01-01 — corrupted silently
@@ -36,7 +36,7 @@ public class LegacyAPIProblems {
         // Problem 2: Calendar API is confusing
         // Months are zero-indexed — January is 0
         Calendar cal = Calendar.getInstance();
-        cal.set(2024, 0, 15); // January 15 — NOT December 15
+        cal.set(2024, 0, 15); // January 15 — not December 15
         // Every developer has been burned by this once
         int month = cal.get(Calendar.MONTH); // returns 0, not 1
         LOG.info("Calendar month for January: " + month
@@ -57,12 +57,13 @@ public class LegacyAPIProblems {
             LOG.warning("Formatting failed: " + e.getMessage());
         }
 
-        LOG.info("Use java.time.LocalDate, ZonedDateTime, and DateTimeFormatter instead");
+        LOG.info("Use java.time classes instead:"
+                + " LocalDate, ZonedDateTime, DateTimeFormatter");
 
         // Output:
         // orderDate after mutation via reference: Thu Jan 01 05:30:00 IST 1970
         // Calendar month for January: 0 (zero-indexed — 0 means January)
         // Formatted epoch: 1970-01-01
-        // Use java.time.LocalDate, ZonedDateTime, and DateTimeFormatter instead
+        // Use java.time classes instead: LocalDate, ZonedDateTime, DateTimeFormatter
     }
 }
