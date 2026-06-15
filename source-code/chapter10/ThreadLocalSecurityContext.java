@@ -1,15 +1,16 @@
-// Java 8+
+// Java 25+
+// Feature shown: ThreadLocal for per-thread security context propagation, final in Java 8+
+
 /**
  * Listing 10.12 — ThreadLocalSecurityContext.java
- * Demonstrates: Thread-local security context for per-request user isolation
+ * Demonstrates: Using ThreadLocal to propagate a per-thread security context
+ *               without passing user credentials as method parameters.
  * Chapter 10: Concurrency Foundations and Coordination
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter10;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class ThreadLocalSecurityContext {
@@ -37,12 +38,13 @@ public class ThreadLocalSecurityContext {
 
     public static void handleRequest(UserContext user, Runnable requestLogic) {
         try {
-            setUser(user);
-            // All downstream calls within this request can access
-            // the authenticated user without it being passed as a parameter
+            setUser(user); // bind user to this thread
+            // All downstream calls within this request
+            // can access the authenticated user
+            // without it being passed as a parameter
             requestLogic.run();
         } finally {
-            clearUser(); // Critical: prevent context leaking to next request
+            clearUser(); // prevent leaking context to next request
         }
     }
 
@@ -56,21 +58,27 @@ public class ThreadLocalSecurityContext {
                 + " (tenant: " + user.tenantId() + ")");
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+    void main() {
+        UserContext alice = new UserContext("alice", "ADMIN", "tenant-42");
+        UserContext bob   = new UserContext("bob",   "USER",  "tenant-99");
 
-        // Simulate two concurrent requests with different users
-        UserContext alice = new UserContext("alice", "ADMIN", "tenant-A");
-        UserContext bob   = new UserContext("bob",   "USER",  "tenant-B");
+        // Simulate two concurrent requests on separate threads
+        Thread t1 = Thread.ofPlatform().start(() ->
+                handleRequest(alice, () -> processOrder("ORD-001")));
 
-        pool.submit(() -> handleRequest(alice, () -> processOrder("ORD-001")));
-        pool.submit(() -> handleRequest(bob,   () -> processOrder("ORD-002")));
+        Thread t2 = Thread.ofPlatform().start(() ->
+                handleRequest(bob, () -> processOrder("ORD-002")));
 
-        pool.shutdown();
-        pool.awaitTermination(5, TimeUnit.SECONDS);
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warning("Interrupted while waiting for request threads");
+        }
 
         // Output:
-        // INFO: Order ORD-001 processed by alice (tenant: tenant-A)
-        // INFO: Order ORD-002 processed by bob (tenant: tenant-B)
+        // INFO: Order ORD-001 processed by alice (tenant: tenant-42)
+        // INFO: Order ORD-002 processed by bob (tenant: tenant-99)
     }
 }
