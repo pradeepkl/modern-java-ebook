@@ -1,9 +1,12 @@
-// Java 8+
+// Java 25+
+// Feature shown: declarative Comparator composition, final in Java 8+
+
 /**
  * Listing 13.6 — ComparatorComposition.java
- * Demonstrates: Declarative Comparator composition using comparing(), thenComparing(), reversed(), nullsFirst()
+ * Demonstrates: Comparator.comparing, thenComparing, reversed, nullsFirst
  * Chapter 13: Declarative Data Transformations
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter13;
 
@@ -15,51 +18,53 @@ import java.util.logging.Logger;
 
 public class ComparatorComposition {
 
-    private static final Logger log = Logger.getLogger(ComparatorComposition.class.getName());
+    private static final Logger log =
+            Logger.getLogger(ComparatorComposition.class.getName());
 
-    record Employee(String name, String department, double salary) {}
+    record Employee(String department, double salary) {}
 
-    public static void main(String[] args) {
+    void main() {
 
-        List<Employee> employees = new ArrayList<>(Arrays.asList(
-            new Employee("Alice",   "Engineering", 95000),
-            new Employee("Bob",     "Marketing",   72000),
-            new Employee("Carol",   "Engineering", 110000),
-            new Employee("Dave",    "Marketing",   85000),
-            new Employee("Eve",     "Engineering", 95000)
+        List<Employee> employees = new ArrayList<>(List.of(
+                new Employee("Engineering", 95000.0),
+                new Employee("Marketing",  72000.0),
+                new Employee("Engineering", 88000.0),
+                new Employee("Marketing",  81000.0),
+                new Employee("Design",     76000.0)
         ));
 
-        // NOT IDEAL: Pre-Java-8 anonymous Comparator — intent buried in mechanics
+        // NOT IDEAL: anonymous Comparator — intent buried in mechanics
         employees.sort(new Comparator<Employee>() {
             @Override
             public int compare(Employee a, Employee b) {
                 int dept = a.department().compareTo(b.department());
                 if (dept != 0) return dept;
-                return Double.compare(b.salary(), a.salary()); // descending salary
+                return Double.compare(b.salary(), a.salary()); // desc
             }
         });
-        log.info("Anonymous comparator result: " + employees);
+        log.info("Anonymous comparator result:");
+        employees.forEach(e ->
+                log.info("  " + e.department() + " / " + e.salary()));
 
         // Declarative — reads as a description of the order
         // Sort by department ascending, then salary descending
         employees.sort(
-            Comparator.comparing(Employee::department)
-                .thenComparing(
-                    Comparator.comparingDouble(Employee::salary)
-                              .reversed())); // descending salary within department
+                Comparator.comparing(Employee::department)
+                        .thenComparing(
+                                Comparator.comparingDouble(
+                                        Employee::salary)
+                                        .reversed()));
 
+        log.info("Declarative comparator result:");
         employees.forEach(e ->
-            log.info(e.department() + " | " + e.name() + " | " + e.salary()));
+                log.info("  " + e.department() + " / " + e.salary()));
 
-        // nullsFirst and nullsLast — handle absent values gracefully
+        // nullsFirst and nullsLast — handle absent values
         List<String> statuses = new ArrayList<>(
-            Arrays.asList("SHIPPED", null, "CONFIRMED", null, "PENDING"));
+                Arrays.asList("SHIPPED", null, "CONFIRMED", null, "PENDING"));
 
-        statuses.sort(
-            Comparator.nullsFirst(
-                Comparator.naturalOrder())); // nulls sorted before non-null values
-
-        log.info("Nulls-first sorted statuses: " + statuses);
+        statuses.sort(Comparator.nullsFirst(Comparator.naturalOrder()));
+        log.info("nullsFirst result: " + statuses);
         // Output: [null, null, CONFIRMED, PENDING, SHIPPED]
     }
 }
