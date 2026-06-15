@@ -1,11 +1,16 @@
-// Java 9+
+// Java 25+
+// Feature shown: private methods in interfaces, final in Java 9+
+
 /**
  * Listing 3.7 — WithdrawalPolicyWithPrivate.java
- * Demonstrates: Private methods in interfaces for encapsulating shared logic
+ * Demonstrates: private methods in interfaces for encapsulating shared logic
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 9+
+ * Requires: Java 9+ for private interface methods; void main() requires Java 25+
+ * (compiled with --enable-preview --release 21 for the void main() instance main method)
  */
 package chapter03;
+
+import java.util.logging.Logger;
 
 @FunctionalInterface
 interface WithdrawalPolicy {
@@ -19,7 +24,7 @@ interface WithdrawalPolicy {
 
     // Private method encapsulates shared validation logic
     private boolean isValidAmount(double amount) {
-        return amount > 0; // Amount must be positive
+        return amount > 0;
     }
 
     default boolean validate(double balance, double amount) {
@@ -29,35 +34,28 @@ interface WithdrawalPolicy {
 
 public class WithdrawalPolicyWithPrivate {
 
-    public static void main(String[] args) {
-        // Policy: no overdraft allowed
+    void main() {
+        Logger log = Logger.getLogger(WithdrawalPolicyWithPrivate.class.getName());
+
+        // No overdraft: withdrawal must not exceed balance
         WithdrawalPolicy noOverdraft = (balance, amount) -> amount <= balance;
 
-        // Policy: max single transaction is $500
-        WithdrawalPolicy maxTransactionLimit = (balance, amount) -> amount <= 500;
+        // Max transaction limit: withdrawal must not exceed 500
+        WithdrawalPolicy maxLimit = (balance, amount) -> amount <= 500;
 
         // Combine both policies using the default and() method
-        WithdrawalPolicy combinedPolicy = noOverdraft.and(maxTransactionLimit);
-
-        double balance = 800.0;
+        WithdrawalPolicy combined = noOverdraft.and(maxLimit);
 
         // validate() uses the private isValidAmount() internally
-        System.out.println("Withdraw $300 from $800 balance: "
-                + combinedPolicy.validate(balance, 300));  // true
-
-        System.out.println("Withdraw $600 from $800 balance: "
-                + combinedPolicy.validate(balance, 600));  // false (exceeds $500 limit)
-
-        System.out.println("Withdraw $900 from $800 balance: "
-                + combinedPolicy.validate(balance, 900));  // false (overdraft)
-
-        System.out.println("Withdraw $-50 from $800 balance: "
-                + combinedPolicy.validate(balance, -50)); // false (invalid amount)
+        log.info("validate(1000, 300): " + combined.validate(1000, 300));  // true
+        log.info("validate(1000, 600): " + combined.validate(1000, 600));  // false (exceeds limit)
+        log.info("validate(200, 300):  " + combined.validate(200, 300));   // false (overdraft)
+        log.info("validate(1000, -50): " + combined.validate(1000, -50));  // false (invalid amount)
 
         // Output:
-        // Withdraw $300 from $800 balance: true
-        // Withdraw $600 from $800 balance: false
-        // Withdraw $900 from $800 balance: false
-        // Withdraw $-50 from $800 balance: false
+        // validate(1000, 300): true
+        // validate(1000, 600): false
+        // validate(200, 300):  false
+        // validate(1000, -50): false
     }
 }
