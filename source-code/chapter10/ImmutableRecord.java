@@ -1,9 +1,11 @@
-// Java 16+
+// Java 25+
+// Feature shown: immutable records shared safely across threads, final in Java 16+
+
 /**
  * Listing 10.3 — ImmutableRecord.java
- * Demonstrates: Records as immutable, thread-safe shared state
+ * Demonstrates: immutable records shared safely across threads without synchronisation
  * Chapter 10: Concurrency Foundations and Coordination
- * Requires: Java 16+
+ * Requires: Java 25+ (instance main method via JEP 512)
  */
 package chapter10;
 
@@ -18,44 +20,37 @@ public class ImmutableRecord {
             Logger.getLogger(ImmutableRecord.class.getName());
 
     // Immutable by construction — safe to share across threads
-    // All fields are final; no setters exist
+    // All fields are final; no setters exist; no coordination needed
     record OrderEvent(String orderId,
                       String customerId,
                       double amount,
                       String status) {}
 
-    public static void main(String[] args) throws InterruptedException {
+    void main() throws InterruptedException {
 
         // Created once, shared freely — no coordination needed
-        // Every thread reads the same immutable snapshot
         OrderEvent event = new OrderEvent(
                 "ORD-001", "CUST-42", 299.99, "PLACED");
 
-        // Four threads will share this single record instance
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+        ExecutorService executor =
+                Executors.newFixedThreadPool(4);
 
         // Multiple threads reading the same record safely
-        // No locks, no volatile, no synchronisation required
+        // No locks, no volatile, no AtomicReference required
         for (int i = 0; i < 10; i++) {
             executor.submit(() ->
                 log.info("Processing: "
                         + event.orderId()
-                        + " | customer: " + event.customerId()
-                        + " | amount: " + event.amount()
-                        + " | status: " + event.status()));
+                        + " amount: " + event.amount()
+                        + " status: " + event.status()));
         }
 
         executor.shutdown();
-        // Wait up to 5 seconds for all tasks to complete
         executor.awaitTermination(5, TimeUnit.SECONDS);
 
-        // Record fields are always consistent — no partial reads possible
-        log.info("Event processed: " + event);
-
-        // Output:
-        // INFO: Processing: ORD-001 | customer: CUST-42 | amount: 299.99 | status: PLACED
-        // INFO: Processing: ORD-001 | customer: CUST-42 | amount: 299.99 | status: PLACED
-        // ... (10 lines, all identical, order may vary by thread scheduling)
-        // INFO: Event processed: OrderEvent[orderId=ORD-001, customerId=CUST-42, amount=299.99, status=PLACED]
+        // Output (order may vary across threads):
+        // INFO: Processing: ORD-001 amount: 299.99 status: PLACED
+        // INFO: Processing: ORD-001 amount: 299.99 status: PLACED
+        // ... (10 lines total, all identical values)
     }
 }
