@@ -1,26 +1,32 @@
-// Java 8+
+// Java 25+
+// Feature shown: ChronoUnit for date arithmetic, TimeUnit for concurrency, final in Java 8+
+
 /**
  * Listing 9.8 — ChronoUnitAndTimeUnit.java
- * Demonstrates: ChronoUnit for java.time arithmetic vs TimeUnit for concurrency APIs
+ * Demonstrates: ChronoUnit (java.time arithmetic) vs TimeUnit (concurrency timeouts)
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public class ChronoUnitAndTimeUnit {
 
-    private static final Logger LOG = Logger.getLogger(ChronoUnitAndTimeUnit.class.getName());
+    private static final Logger LOG =
+            Logger.getLogger(ChronoUnitAndTimeUnit.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    void main() throws InterruptedException {
 
         // ChronoUnit — java.time arithmetic
         LocalDate today = LocalDate.now();
@@ -30,33 +36,36 @@ public class ChronoUnitAndTimeUnit {
         LOG.info("Next quarter: " + nextQuarter);
         LOG.info("Next week: " + nextWeek);
 
-        // ChronoUnit.between — calculate elapsed time
+        // ChronoUnit.between — calculate elapsed calendar units
         LocalDate start = LocalDate.of(2024, 1, 1);
         LocalDate end   = LocalDate.of(2024, 6, 18);
-
         long daysBetween   = ChronoUnit.DAYS.between(start, end);   // 169
         long monthsBetween = ChronoUnit.MONTHS.between(start, end); // 5
         long weeksBetween  = ChronoUnit.WEEKS.between(start, end);  // 24
-        LOG.info("Days between: "   + daysBetween);
+        LOG.info("Days between: " + daysBetween);
         LOG.info("Months between: " + monthsBetween);
-        LOG.info("Weeks between: "  + weeksBetween);
+        LOG.info("Weeks between: " + weeksBetween);
 
-        // ChronoUnit with Instant
+        // ChronoUnit with Instant — machine-level elapsed time
         Instant eventA = Instant.now();
         Instant eventB = eventA.plus(90, ChronoUnit.MINUTES);       // add 90 minutes
         long minutesBetween = ChronoUnit.MINUTES.between(eventA, eventB); // 90
         LOG.info("Minutes between instants: " + minutesBetween);
 
-        // TimeUnit — concurrency timeouts (contrast with ChronoUnit)
+        // TimeUnit — concurrency timeouts
         ExecutorService executor = Executors.newFixedThreadPool(4);
         Future<String> result = executor.submit(() -> "result");
 
-        String value = result.get(5, TimeUnit.SECONDS); // timeout with TimeUnit
-        LOG.info("Future result: " + value);
+        executor.shutdown(); // stop accepting new tasks; submitted tasks continue
+        boolean finished = executor.awaitTermination(10, TimeUnit.SECONDS);
+        LOG.info("Executor finished within timeout: " + finished);
 
-        executor.shutdown();
-        boolean finished = executor.awaitTermination(10, TimeUnit.SECONDS); // TimeUnit for concurrency
-        LOG.info("Executor finished: " + finished);
+        try {
+            String value = result.get(5, TimeUnit.SECONDS); // timeout in seconds
+            LOG.info("Task result: " + value);
+        } catch (ExecutionException | TimeoutException e) {
+            LOG.warning("Task failed or timed out: " + e.getMessage());
+        }
 
         // Converting between TimeUnit values
         long millisFromSeconds  = TimeUnit.SECONDS.toMillis(30); // 30000
@@ -65,15 +74,15 @@ public class ChronoUnitAndTimeUnit {
         LOG.info("2 minutes in seconds: " + secondsFromMinutes);
 
         // Output:
-        // Today: 2024-06-18
-        // Next quarter: 2024-09-18
-        // Next week: 2024-06-25
+        // Today: 2025-07-10
+        // Next quarter: 2025-10-10
+        // Next week: 2025-07-17
         // Days between: 169
         // Months between: 5
         // Weeks between: 24
         // Minutes between instants: 90
-        // Future result: result
-        // Executor finished: true
+        // Executor finished within timeout: true
+        // Task result: result
         // 30 seconds in millis: 30000
         // 2 minutes in seconds: 120
     }
