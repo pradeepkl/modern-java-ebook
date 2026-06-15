@@ -1,49 +1,46 @@
-// Java 8+
+// Java 25+
+// Feature shown: lambda expressions, final in Java 8+
 /**
  * Listing 2.3 — LambdaPredicate.java
- * Demonstrates: Replacing anonymous class ceremony with lambda expressions
- * Chapter 2: Expressing Intent with Modern Java
- * Requires: Java 8+
+ * Demonstrates: lambda expressions vs anonymous class implementations of Predicate
+ * Chapter 2: Writing Java the Modern Way
+ * Requires: Java 25+ (instance main method via JEP 512)
  */
 package chapter02;
 
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 public class LambdaPredicate {
 
-    public static void main(String[] args) {
+    private static final Logger log =
+            Logger.getLogger(LambdaPredicate.class.getName());
 
-        // Step 1: Anonymous class — verbose but explicit
-        Predicate<Integer> isEvenAnon = new Predicate<Integer>() {
-            @Override
-            public boolean test(Integer number) {
-                return number % 2 == 0; // single abstract method of Predicate<T>
-            }
-        };
+    void main() {
+        // Anonymous class — ceremony for a single line of logic
+        Predicate<Integer> isEvenAnon =
+                new Predicate<Integer>() {
+                    @Override
+                    public boolean test(Integer n) {
+                        return n % 2 == 0; // single abstract method implemented verbosely
+                    }
+                };
 
-        // Step 2: Lambda with braces — class body, method name, @Override removed
-        Predicate<Integer> isEven = (number) -> {
-            return number % 2 == 0;
-        };
+        // Lambda — same behavior, intent visible immediately
+        // Compiler infers: input type Integer, return type boolean, method is test()
+        Predicate<Integer> isEven = n -> n % 2 == 0;
 
-        // Step 3: Compact lambda — parentheses, braces, and return keyword removed
-        Predicate<Integer> isEvenLambda = number -> number % 2 == 0;
+        // Both predicates produce identical results
+        log.info("Anonymous: " + isEvenAnon.test(4)); // true
+        log.info("Lambda:    " + isEven.test(4));     // true
 
-        // Demonstrate all three forms produce identical results
-        System.out.println("Anonymous class  isEven.test(4): " + isEvenAnon.test(4));   // true
-        System.out.println("Lambda with body isEven.test(4): " + isEven.test(4));       // true
-        System.out.println("Compact lambda   isEven.test(4): " + isEvenLambda.test(4)); // true
-
-        System.out.println("Anonymous class  isEven.test(7): " + isEvenAnon.test(7));   // false
-        System.out.println("Lambda with body isEven.test(7): " + isEven.test(7));       // false
-        System.out.println("Compact lambda   isEven.test(7): " + isEvenLambda.test(7)); // false
+        log.info("Anonymous: " + isEvenAnon.test(7)); // false
+        log.info("Lambda:    " + isEven.test(7));     // false
 
         // Output:
-        // Anonymous class  isEven.test(4): true
-        // Lambda with body isEven.test(4): true
-        // Compact lambda   isEven.test(4): true
-        // Anonymous class  isEven.test(7): false
-        // Lambda with body isEven.test(7): false
-        // Compact lambda   isEven.test(7): false
+        // INFO: Anonymous: true
+        // INFO: Lambda:    true
+        // INFO: Anonymous: false
+        // INFO: Lambda:    false
     }
 }
