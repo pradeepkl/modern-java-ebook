@@ -12,9 +12,9 @@ package chapter09;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.logging.Logger;
 
 public class InstantVsOffsetVsZoned {
@@ -33,27 +33,27 @@ public class InstantVsOffsetVsZoned {
         LOG.info("OffsetDateTime IST: " + withOffset);
 
         // OffsetDateTime with London summer offset (+01:00, BST)
-        // Offset is preserved at creation time — does not adjust for DST later
+        // Offset at creation time is preserved even if read back in December
         OffsetDateTime londonSummer = OffsetDateTime.now(
                 ZoneOffset.of("+01:00")); // London BST offset
-        LOG.info("OffsetDateTime London summer: " + londonSummer);
+        LOG.info("OffsetDateTime London BST: " + londonSummer);
 
         // ZonedDateTime — timestamp + full timezone rules (DST-aware)
         ZonedDateTime withZone = ZonedDateTime.now(
                 ZoneId.of("Europe/London"));
         LOG.info("ZonedDateTime Europe/London: " + withZone);
 
-        // Converting ZonedDateTime and OffsetDateTime back to Instant
-        Instant fromOffset = withOffset.toInstant(); // timezone context lost
-        Instant fromZoned  = withZone.toInstant();   // timezone context lost
+        // Converting to Instant — timezone context is lost, collapses to UTC
+        Instant fromOffset = withOffset.toInstant();
+        Instant fromZoned  = withZone.toInstant();
         LOG.info("Instant from OffsetDateTime: " + fromOffset);
         LOG.info("Instant from ZonedDateTime:  " + fromZoned);
 
-        // Instant to OffsetDateTime with UTC offset
+        // Instant -> OffsetDateTime with UTC offset
         OffsetDateTime fromInstant = instant.atOffset(ZoneOffset.UTC);
         LOG.info("Instant -> OffsetDateTime UTC: " + fromInstant);
 
-        // Instant to ZonedDateTime in IST
+        // Instant -> ZonedDateTime in IST
         ZonedDateTime fromInstantZoned = instant.atZone(
                 ZoneId.of("Asia/Kolkata"));
         LOG.info("Instant -> ZonedDateTime IST: " + fromInstantZoned);
@@ -61,7 +61,7 @@ public class InstantVsOffsetVsZoned {
         // Output:
         // Instant (UTC): 2024-06-18T08:30:00.123456Z
         // OffsetDateTime IST: 2024-06-18T14:00:00.123456+05:30
-        // OffsetDateTime London summer: 2024-06-18T09:30:00.123456+01:00
+        // OffsetDateTime London BST: 2024-06-18T09:30:00.123456+01:00
         // ZonedDateTime Europe/London: 2024-06-18T09:30:00.123456+01:00[Europe/London]
         // Instant from OffsetDateTime: 2024-06-18T08:30:00.123456Z
         // Instant from ZonedDateTime:  2024-06-18T08:30:00.123456Z
