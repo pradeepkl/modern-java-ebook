@@ -1,9 +1,11 @@
-// Java 8+
+// Java 25+
+// Feature shown: Future.get() blocking on dependent tasks, final in Java 8+
 /**
  * Listing 11.1 — FutureBlockingProblem.java
- * Demonstrates: The blocking problem with raw Future-based concurrency
+ * Demonstrates: How Future.get() blocks the calling thread when tasks depend
+ * on each other, illustrating the core limitation of raw Future composition.
  * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 8+
+ * Requires: Java 25+ (instance main method via JEP 512)
  */
 package chapter11;
 
@@ -36,7 +38,7 @@ public class FutureBlockingProblem {
         return new PricingDecision(order.total() * (1 - discount));
     }
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
@@ -46,22 +48,22 @@ public class FutureBlockingProblem {
         Future<CustomerProfile> profileFuture =
                 executor.submit(() -> fetchProfile("CUST-42"));
 
-        // NOT IDEAL: get() blocks the calling thread while waiting.
-        // The thread is held hostage to I/O and cannot do other work.
+        // NOT IDEAL: get() blocks the calling thread.
+        // While waiting for orderFuture, this thread is idle.
         OrderSummary order = orderFuture.get();        // blocks here
         CustomerProfile profile = profileFuture.get(); // blocks here
 
-        // Step 2: price calculation depends on both results above
+        // Step 2: pricing depends on both results — submitted only after both block
         Future<PricingDecision> priceFuture =
                 executor.submit(() -> calculatePrice(order, profile));
 
         PricingDecision decision = priceFuture.get(); // blocks again
-
         log.info("Final price: " + decision.finalPrice());
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
-        // Output: INFO: Final price: 269.991
+        // Output:
+        // INFO: Final price: 269.991
     }
 }
