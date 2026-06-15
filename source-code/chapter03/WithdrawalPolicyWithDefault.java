@@ -1,34 +1,40 @@
-// Java 8+
+// Java 25+
+// Feature shown: default methods in interfaces, final in Java 8+
+
 /**
  * Listing 3.5 — WithdrawalPolicyWithDefault.java
- * Demonstrates: Functional interfaces with default methods for policy composition
+ * Demonstrates: combining functional interfaces using default methods
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
+import java.util.logging.Logger;
+
+@FunctionalInterface
+interface WithdrawalPolicy {
+    boolean canWithdraw(double balance, double amount);
+
+    // Combine two policies: both must allow the withdrawal
+    default WithdrawalPolicy and(WithdrawalPolicy other) {
+        return (balance, amount) ->
+                this.canWithdraw(balance, amount)
+                        && other.canWithdraw(balance, amount);
+    }
+}
+
 public class WithdrawalPolicyWithDefault {
 
-    // Functional interface with a default composition method
-    @FunctionalInterface
-    interface WithdrawalPolicy {
-        boolean canWithdraw(double balance, double amount);
+    private static final Logger LOG =
+            Logger.getLogger(WithdrawalPolicyWithDefault.class.getName());
 
-        // Combine two policies: both must allow the withdrawal
-        default WithdrawalPolicy and(WithdrawalPolicy other) {
-            return (balance, amount) ->
-                    this.canWithdraw(balance, amount)
-                            && other.canWithdraw(balance, amount);
-        }
-    }
-
-    public static void main(String[] args) {
-
-        // Policy 1: no overdraft allowed
+    void main() {
+        // Policy: withdrawal must not exceed current balance
         WithdrawalPolicy noOverdraft =
                 (balance, amount) -> amount <= balance;
 
-        // Policy 2: single transaction capped at $500
+        // Policy: single transaction must not exceed 500
         WithdrawalPolicy maxTransactionLimit =
                 (balance, amount) -> amount <= 500;
 
@@ -38,32 +44,21 @@ public class WithdrawalPolicyWithDefault {
 
         double balance = 800.0;
 
-        // Test individual policies
-        System.out.println("Balance: $" + balance);
-        System.out.println("--- No Overdraft Policy ---");
-        System.out.println("Withdraw $300: " + noOverdraft.canWithdraw(balance, 300));   // true
-        System.out.println("Withdraw $900: " + noOverdraft.canWithdraw(balance, 900));   // false
+        // Passes both policies
+        LOG.info("Withdraw 300 from 800: "
+                + combinedPolicy.canWithdraw(balance, 300));
 
-        System.out.println("--- Max Transaction Policy ---");
-        System.out.println("Withdraw $300: " + maxTransactionLimit.canWithdraw(balance, 300)); // true
-        System.out.println("Withdraw $600: " + maxTransactionLimit.canWithdraw(balance, 600)); // false
+        // Fails maxTransactionLimit
+        LOG.info("Withdraw 600 from 800: "
+                + combinedPolicy.canWithdraw(balance, 600));
 
-        System.out.println("--- Combined Policy ---");
-        System.out.println("Withdraw $300: " + combinedPolicy.canWithdraw(balance, 300)); // true
-        System.out.println("Withdraw $600: " + combinedPolicy.canWithdraw(balance, 600)); // false (exceeds limit)
-        System.out.println("Withdraw $900: " + combinedPolicy.canWithdraw(balance, 900)); // false (overdraft)
+        // Fails noOverdraft
+        LOG.info("Withdraw 900 from 800: "
+                + combinedPolicy.canWithdraw(balance, 900));
 
         // Output:
-        // Balance: $800.0
-        // --- No Overdraft Policy ---
-        // Withdraw $300: true
-        // Withdraw $900: false
-        // --- Max Transaction Policy ---
-        // Withdraw $300: true
-        // Withdraw $600: false
-        // --- Combined Policy ---
-        // Withdraw $300: true
-        // Withdraw $600: false
-        // Withdraw $900: false
+        // Withdraw 300 from 800: true
+        // Withdraw 600 from 800: false
+        // Withdraw 900 from 800: false
     }
 }
