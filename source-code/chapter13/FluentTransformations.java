@@ -1,10 +1,12 @@
-// Java 8+
+// Java 25+
+// Feature shown: compact source files and instance main methods, final in Java 25+
+
 /**
  * Listing 13.9 — FluentTransformations.java
- * Demonstrates: Imperative vs declarative transformation style using
- *               removeIf, replaceAll, sort, and forEach on a List
+ * Demonstrates: Declarative list transformation using removeIf, replaceAll, sort, forEach
  * Chapter 13: Declarative Data Transformations
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter13;
 
@@ -19,61 +21,40 @@ public class FluentTransformations {
 
     record Product(String productId, String category, double price, boolean available) {}
 
-    public static void main(String[] args) {
+    void main() {
+        // Mutable catalogue for in-place transformation
+        List<Product> catalogue = new ArrayList<>(List.of(
+            new Product("A1", "Books",       12.00, true),
+            new Product("B2", "Electronics", 99.99, false),
+            new Product("C3", "Books",        8.50, true),
+            new Product("D4", "Electronics", 45.00, true),
+            new Product("E5", "Clothing",    25.00, false),
+            new Product("F6", "Clothing",    18.00, true)
+        ));
 
-        // --- Imperative style: mechanics dominate intent ---
-        List<Product> catalogue = buildCatalogue();
-        List<Product> result = new ArrayList<>();
-        for (Product p : catalogue) {
-            if (p.available()) {
-                result.add(new Product(p.productId(),
-                        p.category(), p.price() * 0.9,
-                        p.available()));
-            }
-        }
-        result.sort((a, b) -> Double.compare(a.price(), b.price()));
-        log.info("=== Imperative result ===");
-        result.forEach(p -> log.info(p.category() + " | " + p.productId() + " | £" + p.price()));
+        // removeIf — one sentence: remove unavailable products
+        catalogue.removeIf(p -> !p.available());
 
-        // --- Declarative style: each line is one sentence ---
-        List<Product> catalogue2 = buildCatalogue(); // fresh mutable list
-
-        // Remove unavailable products — reads as intent
-        catalogue2.removeIf(p -> !p.available());
-
-        // Apply 10% discount to every remaining product
-        catalogue2.replaceAll(p ->
-                new Product(p.productId(), p.category(),
+        // replaceAll — one sentence: apply 10 percent discount to every product
+        catalogue.replaceAll(p ->
+            new Product(p.productId(), p.category(),
                         p.price() * 0.9, p.available()));
 
-        // Sort by category, then by price within each category
-        catalogue2.sort(
-                Comparator.comparing(Product::category)
-                        .thenComparingDouble(Product::price));
+        // sort — one sentence: order by category then by price
+        catalogue.sort(
+            Comparator.comparing(Product::category)
+                      .thenComparingDouble(Product::price));
 
-        log.info("=== Declarative result ===");
-        catalogue2.forEach(p ->
-                log.info(p.category()
-                        + " | " + p.productId()
-                        + " | £" + p.price()));
+        // forEach — one sentence: log each product
+        catalogue.forEach(p ->
+            log.info(p.category()
+                + " | " + p.productId()
+                + " | price=" + String.format("%.2f", p.price())));
 
         // Output:
-        // === Imperative result ===
-        // Books | B001 | £13.5
-        // Electronics | E001 | £45.0
-        // Electronics | E002 | £81.0
-        // === Declarative result ===
-        // Books | B001 | £13.5
-        // Electronics | E001 | £45.0
-        // Electronics | E002 | £81.0
-    }
-
-    private static List<Product> buildCatalogue() {
-        List<Product> list = new ArrayList<>();
-        list.add(new Product("E001", "Electronics", 50.0, true));
-        list.add(new Product("B001", "Books",        15.0, true));
-        list.add(new Product("E002", "Electronics",  90.0, true));
-        list.add(new Product("G001", "Gifts",        25.0, false)); // unavailable
-        return list;
+        // Books       | C3 | price=7.65
+        // Books       | A1 | price=10.80
+        // Clothing    | F6 | price=16.20
+        // Electronics | D4 | price=40.50
     }
 }
