@@ -1,23 +1,26 @@
-// Java 16+
+// Java 25+
+// Feature shown: records, final in Java 16+
+
 /**
  * Listing 3.13 — PolymorphicCapabilities.java
- * Demonstrates: Polymorphic use of records implementing multiple interfaces
+ * Demonstrates: composing polymorphic behavior through interfaces on a record,
+ *               showing that a single instance can satisfy multiple interface types
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 16+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
-// Interface representing validation capability
+import java.util.logging.Logger;
+
 interface Validatable {
     boolean isValid();
 }
 
-// Interface representing display capability
 interface Displayable {
     String display();
 }
 
-// Record implementing both interfaces — behavior composed, not inherited
 record EmailAddress(String value) implements Validatable, Displayable {
 
     @Override
@@ -38,28 +41,24 @@ record EmailAddress(String value) implements Validatable, Displayable {
 
 public class PolymorphicCapabilities {
 
-    // Accepts the record through two separate interface lenses
-    static void printIfValid(Validatable v, Displayable d) {
+    private static final Logger LOG =
+            Logger.getLogger(PolymorphicCapabilities.class.getName());
+
+    // Accepts the record through two distinct interface lenses
+    void printIfValid(Validatable v, Displayable d) {
         if (v.isValid()) {
-            System.out.println(d.display()); // only display if valid
+            LOG.info(d.display()); // only display when valid
         }
     }
 
-    public static void main(String[] args) {
-        // Single record instance satisfies both interface contracts
+    void main() {
         EmailAddress email = new EmailAddress("Alice@Example.com");
 
-        // Pass same instance as both Validatable and Displayable
-        printIfValid(email, email);
+        printIfValid(email, email);       // same instance satisfies both interfaces
+        LOG.info(email.domain());         // derived view from record component
 
-        // Derived view computed from immutable state
-        System.out.println(email.domain());
-
-        // Demonstrate invalid address is silently skipped
-        EmailAddress invalid = new EmailAddress("notanemail");
-        printIfValid(invalid, invalid); // prints nothing
-
-        // Output: alice@example.com
-        //         example.com
+        // Output:
+        // alice@example.com
+        // Example.com
     }
 }
