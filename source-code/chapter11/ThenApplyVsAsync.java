@@ -1,10 +1,5 @@
-// Java 8+
-/**
- * Listing 11.3 — ThenApplyVsAsync.java
- * Demonstrates: thenApply vs thenApplyAsync thread scheduling behaviour
- * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: thenApply vs thenApplyAsync continuation threading, final in Java 8+
 package chapter11;
 
 import java.util.concurrent.CompletableFuture;
@@ -13,61 +8,62 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/**
+ * Listing 11.3 — ThenApplyVsAsync.java
+ * Demonstrates: thenApply runs continuation on the completing thread;
+ * thenApplyAsync submits continuation to an executor as a new task.
+ * Chapter 11: Declarative and Structured Concurrency
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 public class ThenApplyVsAsync {
 
     private static final Logger log =
             Logger.getLogger(ThenApplyVsAsync.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
         // thenApply — continuation runs on the completing thread
-        // If supplyAsync completes on thread-2,
-        // the thenApply lambda also runs on thread-2
+        // If supplyAsync completes on pool-thread-1,
+        // the thenApply lambda also runs on pool-thread-1
         CompletableFuture<String> inline =
                 CompletableFuture
                         .supplyAsync(() -> {
-                            log.info("supplyAsync (inline) on: "
-                                    + Thread.currentThread().getName());
+                            log.info("supply on: " + Thread.currentThread().getName());
                             return "order-data";
                         }, executor)
                         .thenApply(data -> {
-                            // Runs on whichever thread completed supplyAsync
-                            log.info("thenApply on: "
-                                    + Thread.currentThread().getName());
-                            return data.toUpperCase();
+                            log.info("thenApply on: " + Thread.currentThread().getName());
+                            return data.toUpperCase(); // same thread as supplier
                         });
 
-        // thenApplyAsync — continuation submitted to executor
-        // as a new task, potentially on a different thread
+        // thenApplyAsync — continuation submitted to executor as a new task,
+        // potentially on a different thread from the completing stage
         CompletableFuture<String> offloaded =
                 CompletableFuture
                         .supplyAsync(() -> {
-                            log.info("supplyAsync (offloaded) on: "
-                                    + Thread.currentThread().getName());
+                            log.info("supply on: " + Thread.currentThread().getName());
                             return "order-data";
                         }, executor)
                         .thenApplyAsync(data -> {
-                            // Submitted as a new task to the executor
-                            log.info("thenApplyAsync on: "
-                                    + Thread.currentThread().getName());
-                            return data.toUpperCase();
+                            log.info("thenApplyAsync on: " + Thread.currentThread().getName());
+                            return data.toUpperCase(); // new task on executor
                         }, executor);
 
-        // Block only at the terminal result
-        log.info("Inline result:    " + inline.get());
+        log.info("Inline result: " + inline.get());
         log.info("Offloaded result: " + offloaded.get());
 
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
         // Output:
-        // INFO: supplyAsync (inline) on: pool-1-thread-1
-        // INFO: thenApply on: pool-1-thread-1
-        // INFO: supplyAsync (offloaded) on: pool-1-thread-2
-        // INFO: thenApplyAsync on: pool-1-thread-3
-        // INFO: Inline result:    ORDER-DATA
-        // INFO: Offloaded result: ORDER-DATA
+        // supply on: pool-1-thread-1
+        // thenApply on: pool-1-thread-1
+        // supply on: pool-1-thread-2
+        // thenApplyAsync on: pool-1-thread-3
+        // Inline result: ORDER-DATA
+        // Offloaded result: ORDER-DATA
     }
 }
