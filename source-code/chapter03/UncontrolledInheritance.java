@@ -1,22 +1,32 @@
-// Java 8+
+// Java 25+
+// Feature shown: compact source files and instance main methods, final in Java 25+
+
 /**
  * Listing 3.9 — UncontrolledInheritance.java
- * Demonstrates: How unrestricted inheritance allows subclasses to violate
- *               the intended design and invariants of a base class.
+ * Demonstrates: the risks of uncontrolled inheritance where a subclass
+ * violates the intended design of a base class by overriding a method
+ * and introducing unexpected side effects via direct field access.
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
-// Base class with a clear contract: deposit must be a positive amount
+import java.util.logging.Logger;
+
 class BankAccount {
+
+    private static final Logger log = Logger.getLogger(BankAccount.class.getName());
+
+    // Protected field — accessible to subclasses, but risky
     protected double balance;
 
     public void deposit(double amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Invalid amount");
         }
-        balance += amount; // Only the deposited amount should be added
+        balance += amount; // Intended: only increment by the deposited amount
+        log.info("Deposited " + amount + ", balance is now " + balance);
     }
 
     public double getBalance() {
@@ -36,36 +46,29 @@ class SavingsAccount extends BankAccount {
     // Overriding deposit to silently add interest as a side effect
     @Override
     public void deposit(double amount) {
-        super.deposit(amount);
-        balance += amount * interestRate; // Mutates balance beyond the contract
+        super.deposit(amount);                  // Calls base deposit
+        balance += amount * interestRate;       // Mutates protected field directly
     }
 }
 
 public class UncontrolledInheritance {
 
-    public static void main(String[] args) {
-        BankAccount basic = new BankAccount();
-        basic.deposit(1000.0);
-        // Expected: balance == 1000.0
-        System.out.println("BankAccount balance after deposit of 1000: "
-                + basic.getBalance());
+    private static final Logger log = Logger.getLogger(UncontrolledInheritance.class.getName());
 
+    void main() {
+        BankAccount regular = new BankAccount();
+        regular.deposit(1000.0);
+        log.info("Regular account balance: " + regular.getBalance());
+
+        // SavingsAccount silently inflates balance beyond the deposited amount
         SavingsAccount savings = new SavingsAccount(0.05);
         savings.deposit(1000.0);
-        // Unexpected: balance == 1050.0 due to silent side effect in override
-        System.out.println("SavingsAccount balance after deposit of 1000 (rate=5%): "
-                + savings.getBalance());
-
-        // Demonstrates the Liskov Substitution Principle violation:
-        // treating SavingsAccount as BankAccount yields surprising results
-        BankAccount polymorphic = new SavingsAccount(0.10);
-        polymorphic.deposit(500.0);
-        System.out.println("Polymorphic SavingsAccount balance after deposit of 500 (rate=10%): "
-                + polymorphic.getBalance());
+        log.info("Savings account balance: " + savings.getBalance());
 
         // Output:
-        // BankAccount balance after deposit of 1000: 1000.0
-        // SavingsAccount balance after deposit of 1000 (rate=5%): 1050.0
-        // Polymorphic SavingsAccount balance after deposit of 500 (rate=10%): 550.0
+        // Deposited 1000.0, balance is now 1000.0
+        // Regular account balance: 1000.0
+        // Deposited 1000.0, balance is now 1000.0
+        // Savings account balance: 1050.0
     }
 }
