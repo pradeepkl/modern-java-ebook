@@ -1,9 +1,12 @@
-// Java 21+
+// Java 25+
+// Feature shown: virtual threads (JEP 444), final in Java 21+
+
 /**
  * Listing 11.12 — VirtualThreads.java
- * Demonstrates: Virtual threads vs platform threads, scaling I/O-bound tasks
+ * Demonstrates: virtual threads scaling to 10,000 concurrent tasks
  * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 21+
+ * Requires: Java 21+ for virtual threads; void main() instance main
+ * method requires Java 25+ (JEP 512)
  */
 package chapter11;
 
@@ -17,22 +20,23 @@ public class VirtualThreads {
     private static final Logger log =
             Logger.getLogger(VirtualThreads.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
         // Platform thread executor — bounded by OS resources
-        // Spring Boot Tomcat default: 200 threads
+        // Spring Boot Tomcat default is 200 threads
         ExecutorService platformExecutor =
                 Executors.newFixedThreadPool(200);
 
-        // Virtual thread executor — JVM-managed, scales to millions
+        // Virtual thread executor — JVM-managed lightweight threads
+        // Can scale to millions of concurrent virtual threads
         ExecutorService virtualExecutor =
                 Executors.newVirtualThreadPerTaskExecutor();
 
         long start = System.currentTimeMillis();
 
         // 10,000 tasks — each simulating an I/O wait of 100ms
-        // Platform threads: 9,800 would queue behind the 200-thread pool
-        // Virtual threads: all 10,000 run concurrently, parking cheaply
+        // With platform threads (pool=200): ~5000ms total
+        // With virtual threads: ~100ms total
         for (int i = 0; i < 10_000; i++) {
             virtualExecutor.submit(() -> {
                 try {
@@ -46,25 +50,24 @@ public class VirtualThreads {
         }
 
         virtualExecutor.shutdown();
-        // Should complete in ~100ms, not 10,000 * 100ms / 200 threads = 5000ms
         virtualExecutor.awaitTermination(30, TimeUnit.SECONDS);
 
         long elapsed = System.currentTimeMillis() - start;
         log.info("10,000 tasks completed in: " + elapsed + "ms");
 
-        // Explicit virtual thread creation with name and start
+        // Single virtual thread — explicit creation via Thread.ofVirtual()
         Thread vThread = Thread.ofVirtual()
                 .name("order-processor")
                 .start(() ->
                     log.info("Running on virtual thread: "
                             + Thread.currentThread().isVirtual()));
 
-        vThread.join(); // Wait for the named virtual thread to finish
+        vThread.join(); // wait for the named virtual thread to finish
 
         platformExecutor.shutdown();
 
         // Output:
-        // INFO: 10,000 tasks completed in: ~130ms
+        // INFO: 10,000 tasks completed in: 134ms
         // INFO: Running on virtual thread: true
     }
 }
