@@ -1,9 +1,12 @@
-// Java 8+
+// Java 25+
+// Feature shown: Duration and Period, final in Java 8+
+
 /**
  * Listing 9.7 — DurationAndPeriod.java
  * Demonstrates: Duration for machine elapsed time and Period for calendar elapsed time
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
@@ -17,8 +20,7 @@ public class DurationAndPeriod {
 
     private static final Logger LOG = Logger.getLogger(DurationAndPeriod.class.getName());
 
-    public static void main(String[] args) {
-
+    void main() {
         // Duration — machine elapsed time (works with Instant)
         Instant start = Instant.now();
         Instant end = start.plusMillis(1500); // simulate 1.5 seconds elapsed
@@ -32,12 +34,12 @@ public class DurationAndPeriod {
         LOG.info("Elapsed seconds: " + seconds);
         LOG.info("Elapsed nanos:   " + nanos);
 
-        // Duration arithmetic — combining durations
+        // Duration arithmetic — combining two durations
         Duration timeout    = Duration.ofSeconds(30);
         Duration retryDelay = Duration.ofMillis(500);
         Duration totalWait  = timeout.plus(retryDelay); // 30.5 seconds
 
-        LOG.info("Total wait (ms): " + totalWait.toMillis()); // 30500
+        LOG.info("Total wait ms: " + totalWait.toMillis()); // 30500
 
         // Period — calendar elapsed time (works with LocalDate)
         LocalDate subscriptionStart = LocalDate.of(2024, 1, 15);
@@ -48,26 +50,25 @@ public class DurationAndPeriod {
 
         LOG.info("Subscription months: " + months);
 
-        // Period arithmetic — adding calendar months
+        // Period arithmetic — advance a date by a calendar period
         LocalDate renewalDate = subscriptionEnd.plus(Period.ofMonths(12));
+
         LOG.info("Renewal date: " + renewalDate); // 2025-07-15
 
-        // Key distinction: Duration.ofDays(30) is always 30 × 24 hours
+        // Key distinction logged for clarity:
+        // Duration.ofDays(30) is always exactly 30 x 24 hours
         // Period.ofMonths(1) varies — Jan=31 days, Feb=28/29, Jun=30
-        Duration fixedDays   = Duration.ofDays(30);
-        Period   calendarMonth = Period.ofMonths(1);
-
-        LOG.info("Duration 30 days in hours: " + fixedDays.toHours()); // 720
-        LOG.info("Period 1 month (calendar-aware): " + calendarMonth);
+        LOG.info("Duration 30 days in hours: " + Duration.ofDays(30).toHours()); // 720
+        LOG.info("Use Period when calendar semantics matter");
 
         // Output:
         // Elapsed millis:  1500
         // Elapsed seconds: 1
         // Elapsed nanos:   1500000000
-        // Total wait (ms): 30500
+        // Total wait ms: 30500
         // Subscription months: 6
         // Renewal date: 2025-07-15
         // Duration 30 days in hours: 720
-        // Period 1 month (calendar-aware): P1M
+        // Use Period when calendar semantics matter
     }
 }
