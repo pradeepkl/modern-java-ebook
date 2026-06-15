@@ -1,9 +1,11 @@
-// Java 8+
+// Java 25+
+// Feature shown: AtomicInteger lock-free counter, final in Java 8+
 /**
  * Listing 10.10 — AtomicCounter.java
- * Demonstrates: Thread-safe counter using AtomicInteger without synchronized
+ * Demonstrates: AtomicInteger for thread-safe lock-free counting
  * Chapter 10: Concurrency Foundations and Coordination
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter10;
 
@@ -21,28 +23,25 @@ public class AtomicCounter {
     // AtomicInteger — thread-safe without synchronized
     static AtomicInteger count = new AtomicInteger(0);
 
-    public static void main(String[] args) throws InterruptedException {
+    void main() throws InterruptedException {
 
-        // 10 threads competing to increment the shared counter
-        ExecutorService executor = Executors.newFixedThreadPool(10);
+        // Fixed pool of 10 threads submitting 1000 increments
+        ExecutorService executor =
+                Executors.newFixedThreadPool(10);
 
-        // Submit 1000 increment tasks — each uses CAS internally
         for (int i = 0; i < 1000; i++) {
-            executor.submit(() ->
-                    count.incrementAndGet()); // atomic compare-and-set, no lock needed
+            // Each task increments atomically via compare-and-set
+            executor.submit(() -> count.incrementAndGet());
         }
 
+        // Stop accepting new tasks
         executor.shutdown();
 
-        // Wait for all tasks to complete before reading final value
-        boolean finished = executor.awaitTermination(5, TimeUnit.SECONDS);
+        // Wait for all in-flight increments to complete
+        executor.awaitTermination(5, TimeUnit.SECONDS);
 
-        if (finished) {
-            // Should always print 1000 — no lost updates
-            log.info("Final count: " + count.get());
-        } else {
-            log.warning("Executor did not terminate in time");
-        }
+        // All 1000 increments are visible — no lost updates
+        log.info("Final count: " + count.get());
 
         // Output: INFO: Final count: 1000
     }
