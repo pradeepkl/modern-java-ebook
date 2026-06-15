@@ -1,10 +1,5 @@
-// Java 8+
-/**
- * Listing 11.9 — ExecutorCompletionServiceExample.java
- * Demonstrates: Processing results in completion order using ExecutorCompletionService
- * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: ExecutorCompletionService completion-order processing, final in Java 8+
 package chapter11;
 
 import java.util.List;
@@ -15,18 +10,23 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/**
+ * Listing 11.9 — ExecutorCompletionServiceExample.java
+ * Demonstrates: processing task results in completion order using ExecutorCompletionService
+ * Chapter 11: Declarative and Structured Concurrency
+ * Requires: Java 8+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 public class ExecutorCompletionServiceExample {
 
     private static final Logger log =
             Logger.getLogger(
                     ExecutorCompletionServiceExample.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
-        // Fixed thread pool to process orders concurrently
         ExecutorService executor = Executors.newFixedThreadPool(4);
-
-        // Wraps executor — completed tasks are placed on an internal queue
+        // Wraps the executor; completed tasks are placed on an internal queue
         ExecutorCompletionService<String> completion =
                 new ExecutorCompletionService<>(executor);
 
@@ -43,11 +43,11 @@ public class ExecutorCompletionServiceExample {
             });
         }
 
-        // Process results as they complete — NOT in submission order
+        // Process results as they complete — not in submission order
         // take() blocks until the next completed result is available
         for (int i = 0; i < orderIds.size(); i++) {
             Future<String> completed = completion.take(); // blocks for next done
-            log.info("Completed: " + completed.get());   // get() returns immediately
+            log.info("Completed: " + completed.get());
         }
 
         executor.shutdown();
