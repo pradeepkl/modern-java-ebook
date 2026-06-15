@@ -1,9 +1,11 @@
-// Java 8+
+// Java 25+
+// Feature shown: Clock abstraction for testable time-dependent code, final in Java 8+
 /**
  * Listing 9.10 — ClockAbstraction.java
- * Demonstrates: Using Clock abstraction for deterministic, testable date logic
+ * Demonstrates: Clock abstraction for testable, deterministic time-dependent code
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
@@ -23,28 +25,29 @@ public class ClockAbstraction {
             LocalDate endDate) {
 
         boolean isActive(Clock clock) {
-            LocalDate today = LocalDate.now(clock); // inject clock, not system
+            LocalDate today = LocalDate.now(clock); // inject clock, not system time
             return !today.isBefore(startDate) && !today.isAfter(endDate);
         }
 
         boolean expiresWithinDays(int days, Clock clock) {
             LocalDate today = LocalDate.now(clock);
             LocalDate threshold = today.plusDays(days);
-            return endDate.isBefore(threshold); // true if expiry is soon
+            return endDate.isBefore(threshold);
         }
     }
 
-    // Production usage — real system clock
-    public static void checkSubscription(Subscription sub) {
-        Clock productionClock = Clock.systemDefaultZone(); // real wall clock
-        log.info("Active (production clock): " + sub.isActive(productionClock));
-    }
+    void main() {
+        // Production usage — real system clock, non-deterministic
+        Clock productionClock = Clock.systemDefaultZone();
+        Subscription prodSub = new Subscription(
+                "C001",
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2099, 12, 31));
+        log.info("Production active: " + prodSub.isActive(productionClock));
 
-    // Test usage — fixed clock, fully deterministic
-    public static void testSubscription() {
-        // Fix the clock at a known date — always 2024-06-18
+        // Test usage — fixed clock, fully deterministic
         Clock fixedClock = Clock.fixed(
-                Instant.parse("2024-06-18T00:00:00Z"),
+                Instant.parse("2024-06-18T00:00:00Z"), // pinned instant
                 ZoneId.of("UTC"));
 
         Subscription sub = new Subscription(
@@ -53,24 +56,16 @@ public class ClockAbstraction {
                 LocalDate.of(2024, 12, 31));
 
         boolean active = sub.isActive(fixedClock);
-        log.info("Active (fixed clock 2024-06-18): " + active); // always true
+        // Always true for 2024-06-18 — deterministic regardless of when test runs
+        log.info("Fixed-clock active: " + active);
 
         boolean expiresSoon = sub.expiresWithinDays(30, fixedClock);
-        log.info("Expires within 30 days: " + expiresSoon); // always false
-    }
-
-    public static void main(String[] args) {
-        Subscription sub = new Subscription(
-                "C001",
-                LocalDate.of(2024, 1, 1),
-                LocalDate.of(2024, 12, 31));
-
-        checkSubscription(sub);  // uses real system clock
-        testSubscription();      // uses fixed deterministic clock
+        // Always false — Dec 31 is more than 30 days from Jun 18
+        log.info("Expires within 30 days: " + expiresSoon);
 
         // Output:
-        // Active (production clock): false  (depends on current date)
-        // Active (fixed clock 2024-06-18): true
+        // Production active: true
+        // Fixed-clock active: true
         // Expires within 30 days: false
     }
 }
