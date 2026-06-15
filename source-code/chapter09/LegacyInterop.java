@@ -1,6 +1,5 @@
 // Java 25+
 // Feature shown: legacy Date/Calendar to java.time conversion, final in Java 8+
-
 /**
  * Listing 9.13 — LegacyInterop.java
  * Demonstrates: Converting between legacy java.util.Date, java.util.Calendar,
@@ -24,26 +23,26 @@ public class LegacyInterop {
         // Date -> Instant (the conversion hub)
         java.util.Date legacyDate = new java.util.Date();
         Instant fromDate = legacyDate.toInstant(); // Date carries an Instant internally
-        LOG.info("Legacy Date -> Instant: " + fromDate);
+        LOG.info("Date -> Instant: " + fromDate);
 
         // Instant -> Date
         Instant instant = Instant.now();
         java.util.Date toDate = java.util.Date.from(instant); // reverse bridge
-        LOG.info("Instant -> Legacy Date: " + toDate);
+        LOG.info("Instant -> Date: " + toDate);
 
         // Calendar -> Instant
         java.util.Calendar calendar = java.util.Calendar.getInstance();
         Instant fromCalendar = calendar.toInstant(); // Calendar also exposes toInstant()
-        LOG.info("Legacy Calendar -> Instant: " + fromCalendar);
+        LOG.info("Calendar -> Instant: " + fromCalendar);
 
         // LocalDate -> java.sql.Date (for JDBC)
         LocalDate localDate = LocalDate.of(2024, 6, 18);
         java.sql.Date sqlDate = java.sql.Date.valueOf(localDate); // direct valueOf bridge
-        LOG.info("LocalDate -> java.sql.Date: " + sqlDate);
+        LOG.info("LocalDate -> sql.Date: " + sqlDate);
 
         // java.sql.Date -> LocalDate
         LocalDate fromSql = sqlDate.toLocalDate(); // reverse bridge
-        LOG.info("java.sql.Date -> LocalDate: " + fromSql);
+        LOG.info("sql.Date -> LocalDate: " + fromSql);
 
         // The conversion pattern:
         // Legacy -> Instant -> modern java.time type
@@ -52,11 +51,11 @@ public class LegacyInterop {
         LOG.info("Round-trip check, dates match: " + localDate.equals(fromSql));
 
         // Output:
-        // Legacy Date -> Instant: 2024-06-18T10:15:30.123Z
-        // Instant -> Legacy Date: Tue Jun 18 10:15:30 UTC 2024
-        // Legacy Calendar -> Instant: 2024-06-18T10:15:30.456Z
-        // LocalDate -> java.sql.Date: 2024-06-18
-        // java.sql.Date -> LocalDate: 2024-06-18
+        // Date -> Instant: 2024-06-18T10:15:30.123Z
+        // Instant -> Date: Tue Jun 18 10:15:30 UTC 2024
+        // Calendar -> Instant: 2024-06-18T10:15:30.456Z
+        // LocalDate -> sql.Date: 2024-06-18
+        // sql.Date -> LocalDate: 2024-06-18
         // Round-trip check, dates match: true
     }
 }
