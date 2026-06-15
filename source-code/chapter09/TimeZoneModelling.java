@@ -4,7 +4,7 @@
 /**
  * Listing 9.6 — TimeZoneModelling.java
  * Demonstrates: ZoneId, ZonedDateTime, and withZoneSameInstant for
- * converting a meeting time across multiple time zones
+ * converting a meeting time across multiple time zones correctly.
  * Chapter 9: Modern Date and Time
  * Requires: Java 25+ (compiled with --enable-preview --release 21 for
  * the void main() instance main method)
@@ -37,10 +37,10 @@ public class TimeZoneModelling {
         ZonedDateTime meetingInLondon  = meetingInMumbai
                 .withZoneSameInstant(london);   // IST is UTC+5:30, BST is UTC+1
         ZonedDateTime meetingInNewYork = meetingInMumbai
-                .withZoneSameInstant(newYork);  // New York EDT is UTC-4
+                .withZoneSameInstant(newYork);  // EDT is UTC-4
 
         ZonedDateTime meetingInUtc = meetingInMumbai
-                .withZoneSameInstant(utc);      // Canonical UTC representation
+                .withZoneSameInstant(utc);      // UTC baseline
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern(
                 "yyyy-MM-dd HH:mm z (OOOO)");
@@ -54,7 +54,7 @@ public class TimeZoneModelling {
         Instant asInstant = meetingInMumbai.toInstant();
         LOG.info("As Instant (UTC): " + asInstant);
 
-        // Reconstruct for any viewer's timezone from the same Instant
+        // Reconstruct for any viewer's timezone from the Instant
         ZonedDateTime forViewer = asInstant.atZone(kolkata);
         LOG.info("Reconstructed for Kolkata viewer: " + forViewer.format(fmt));
 
