@@ -1,9 +1,12 @@
-// Java 8+
+// Java 25+
+// Feature shown: common date-time anti-patterns and correct alternatives, final in Java 8+
+
 /**
  * Listing 9.12 — TimeBugs.java
- * Demonstrates: Common date/time bugs and their correct alternatives
+ * Demonstrates: common date-time anti-patterns and their correct alternatives
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
@@ -18,7 +21,7 @@ import java.util.logging.Logger;
 
 public class TimeBugs {
 
-    private static final Logger log = Logger.getLogger(TimeBugs.class.getName());
+    private static final Logger LOG = Logger.getLogger(TimeBugs.class.getName());
 
     // NOT IDEAL: Shared SimpleDateFormat — not thread-safe
     static SimpleDateFormat sharedFormatter =
@@ -30,43 +33,39 @@ public class TimeBugs {
     static final DateTimeFormatter SAFE_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public static void demonstrateBugs() {
-        // Bug 1: LocalDateTime for audit timestamps — no timezone
+    void main() {
+        // Bug 1: LocalDateTime for audit timestamps — no timezone, ambiguous
         LocalDateTime auditTime = LocalDateTime.now();
-        log.info("BAD  audit timestamp (no zone): " + auditTime);
+        LOG.info("Ambiguous audit time (no zone): " + auditTime);
 
-        // Correct: Instant for audit timestamps — always UTC
+        // Correct: Instant for audit timestamps — always UTC, unambiguous
         Instant auditInstant = Instant.now();
-        log.info("GOOD audit timestamp (UTC Instant): " + auditInstant);
+        LOG.info("Unambiguous audit instant (UTC): " + auditInstant);
 
         // Bug 2: Storing user appointment as Instant — loses DST meaning
         Instant appointmentWrong = Instant.now();
-        log.info("BAD  appointment (Instant loses DST context): " + appointmentWrong);
+        LOG.info("Appointment as Instant (loses DST context): " + appointmentWrong);
 
         // Correct: ZonedDateTime preserves timezone rules including DST
         ZonedDateTime appointmentRight =
                 ZonedDateTime.of(2024, 6, 18, 14, 0, 0, 0,
                         ZoneId.of("Asia/Kolkata"));
-        log.info("GOOD appointment (ZonedDateTime): " + appointmentRight);
+        LOG.info("Appointment as ZonedDateTime (DST-aware): " + appointmentRight);
 
-        // Bug 3: Hardcoded UTC offset — wrong when DST changes
+        // Bug 3: Hardcoded UTC offset — wrong for London half the year
         ZoneOffset hardcoded = ZoneOffset.of("+01:00");
-        log.info("BAD  London offset hardcoded: " + hardcoded
-                + " (wrong in winter — London is UTC+0 then)");
+        LOG.info("Hardcoded offset (ignores DST rules): " + hardcoded);
 
-        // Correct: ZoneId knows DST rules automatically
+        // Correct: ZoneId knows DST rules for the named region
         ZoneId london = ZoneId.of("Europe/London");
-        log.info("GOOD London ZoneId (DST-aware): " + london);
-    }
+        LOG.info("Named zone (DST-aware): " + london);
 
-    public static void main(String[] args) {
-        demonstrateBugs();
         // Output:
-        // BAD  audit timestamp (no zone): 2024-06-18T14:00:00.123
-        // GOOD audit timestamp (UTC Instant): 2024-06-18T08:30:00.456Z
-        // BAD  appointment (Instant loses DST context): 2024-06-18T08:30:00.456Z
-        // GOOD appointment (ZonedDateTime): 2024-06-18T14:00+05:30[Asia/Kolkata]
-        // BAD  London offset hardcoded: +01:00 (wrong in winter — London is UTC+0 then)
-        // GOOD London ZoneId (DST-aware): Europe/London
+        // Ambiguous audit time (no zone): 2024-06-18T14:00:00.123456
+        // Unambiguous audit instant (UTC): 2024-06-18T08:30:00.123456Z
+        // Appointment as Instant (loses DST context): 2024-06-18T08:30:00.123456Z
+        // Appointment as ZonedDateTime (DST-aware): 2024-06-18T14:00+05:30[Asia/Kolkata]
+        // Hardcoded offset (ignores DST rules): +01:00
+        // Named zone (DST-aware): Europe/London
     }
 }
