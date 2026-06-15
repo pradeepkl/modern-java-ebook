@@ -1,9 +1,13 @@
-// Java 8+
+// Java 25+
+// Feature shown: DateTimeFormatter, DateTimeFormatterBuilder, final in Java 8+
+
 /**
  * Listing 9.9 — FormattingAndParsing.java
- * Demonstrates: DateTimeFormatter formatting, parsing, and flexible multi-format parsing
+ * Demonstrates: DateTimeFormatter for formatting and parsing, and
+ * DateTimeFormatterBuilder for flexible multi-pattern parsing
  * Chapter 9: Modern Date and Time
- * Requires: Java 8+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter09;
 
@@ -17,64 +21,55 @@ import java.util.logging.Logger;
 
 public class FormattingAndParsing {
 
-    // Static, shared — immutable and thread-safe
-    private static final DateTimeFormatter ISO_DATE =
-            DateTimeFormatter.ISO_LOCAL_DATE;
-    private static final DateTimeFormatter CUSTOM =
-            DateTimeFormatter.ofPattern("dd MMM yyyy");
-    private static final DateTimeFormatter WITH_ZONE =
-            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm z");
+    void main() {
+        Logger log = Logger.getLogger("FormattingAndParsing");
 
-    // Flexible formatter accepts multiple input formats
-    private static final DateTimeFormatter FLEXIBLE =
-            new DateTimeFormatterBuilder()
-                    .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    .appendOptional(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                    .appendOptional(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-                    .toFormatter();
-
-    public static void main(String[] args) {
-        Logger log = Logger.getLogger(FormattingAndParsing.class.getName());
+        // DateTimeFormatter — immutable, thread-safe, sharable
+        DateTimeFormatter isoDate = DateTimeFormatter.ISO_LOCAL_DATE;
+        DateTimeFormatter custom  = DateTimeFormatter.ofPattern("dd MMM yyyy");
+        DateTimeFormatter withZone =
+                DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm z");
 
         // Formatting a LocalDate
         LocalDate date = LocalDate.of(2024, 6, 18);
-        String iso   = date.format(ISO_DATE);  // ISO 8601 — for storage/APIs
-        String human = date.format(CUSTOM);    // Human-readable — for display
-
-        log.info("ISO format:   " + iso);
-        log.info("Human format: " + human);
+        String iso   = date.format(isoDate); // 2024-06-18
+        String human = date.format(custom);  // 18 Jun 2024
+        log.info("ISO:   " + iso);
+        log.info("Human: " + human);
 
         // Formatting a ZonedDateTime with zone abbreviation
-        ZonedDateTime zdt = ZonedDateTime.of(
-                date.atTime(14, 30), ZoneId.of("Asia/Kolkata"));
-        String full = zdt.format(WITH_ZONE);
-        log.info("Zoned format: " + full);
+        ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
+        String full = zdt.format(withZone);  // e.g. 18 Jun 2024 14:30 IST
+        log.info("Full:  " + full);
 
         // Parsing — always wrap in try-catch; user input is unreliable
         try {
-            LocalDate parsed = LocalDate.parse("2024-06-18", ISO_DATE);
-            log.info("Parsed date:  " + parsed);
+            LocalDate parsed = LocalDate.parse(
+                    "2024-06-18", DateTimeFormatter.ISO_LOCAL_DATE);
+            log.info("Parsed: " + parsed);
         } catch (DateTimeParseException e) {
             // Handle invalid format — do not propagate raw exception
             log.warning("Invalid date format: " + e.getMessage());
         }
 
-        // Flexible parsing — all three formats succeed
-        LocalDate a = LocalDate.parse("2024-06-18",  FLEXIBLE);
-        LocalDate b = LocalDate.parse("18/06/2024",  FLEXIBLE);
-        LocalDate c = LocalDate.parse("18 Jun 2024", FLEXIBLE);
+        // DateTimeFormatterBuilder — accept multiple formats from same source
+        DateTimeFormatter flexible = new DateTimeFormatterBuilder()
+                .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                .appendOptional(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                .appendOptional(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                .toFormatter();
 
-        log.info("Flexible a: " + a);
-        log.info("Flexible b: " + b);
-        log.info("Flexible c: " + c);
+        // All three parse successfully
+        LocalDate a = LocalDate.parse("2024-06-18", flexible);
+        LocalDate b = LocalDate.parse("18/06/2024", flexible);
+        LocalDate c = LocalDate.parse("18 Jun 2024", flexible);
+        log.info("a=" + a + "  b=" + b + "  c=" + c);
 
         // Output:
-        // ISO format:   2024-06-18
-        // Human format: 18 Jun 2024
-        // Zoned format: 18 Jun 2024 14:30 IST
-        // Parsed date:  2024-06-18
-        // Flexible a: 2024-06-18
-        // Flexible b: 2024-06-18
-        // Flexible c: 2024-06-18
+        // ISO:   2024-06-18
+        // Human: 18 Jun 2024
+        // Full:  18 Jun 2024 14:30 IST  (time varies)
+        // Parsed: 2024-06-18
+        // a=2024-06-18  b=2024-06-18  c=2024-06-18
     }
 }
