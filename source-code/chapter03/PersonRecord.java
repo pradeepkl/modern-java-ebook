@@ -1,62 +1,57 @@
-// Java 16+
+// Java 25+
+// Feature shown: records, final in Java 16+
+
 /**
  * Listing 3.11 — PersonRecord.java
- * Demonstrates: Records as immutable data carriers with auto-generated
- *               accessors, equals, hashCode, toString, and custom methods
+ * Demonstrates: records as immutable data carriers with custom instance methods
  * Chapter 3: Inheritance Reimagined
- * Requires: Java 16+
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
  */
 package chapter03;
 
-// Record declaration: components become final fields automatically
+import java.util.logging.Logger;
+
 public record PersonRecord(String name, int age) {
 
-    // Compact canonical constructor for validation
+    // Custom compact constructor for validation
     public PersonRecord {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name must not be blank");
         }
         if (age < 0) {
-            throw new IllegalArgumentException("Age must be non-negative");
+            throw new IllegalArgumentException("Age must not be negative");
         }
     }
 
-    // Custom instance method — records can define behavior
+    // Custom instance method added to the record
     public String greet() {
         return "Hello, my name is " + name
                 + " and I am " + age + " years old.";
     }
 
-    public static void main(String[] args) {
-        // Records are instantiated like regular classes
+    void main() {
+        Logger log = Logger.getLogger(PersonRecord.class.getName());
+
+        // Records provide equals, hashCode, and toString automatically
         PersonRecord alice = new PersonRecord("Alice", 30);
         PersonRecord bob   = new PersonRecord("Bob", 25);
-
-        // Auto-generated accessor methods (not getters — just component names)
-        System.out.println("Name : " + alice.name());  // accessor for name
-        System.out.println("Age  : " + alice.age());   // accessor for age
-
-        // Auto-generated toString()
-        System.out.println(alice);   // PersonRecord[name=Alice, age=30]
-
-        // Auto-generated equals() compares component values
         PersonRecord alice2 = new PersonRecord("Alice", 30);
-        System.out.println("Equal: " + alice.equals(alice2)); // true
 
-        // Auto-generated hashCode() consistent with equals()
-        System.out.println("Same hash: " + (alice.hashCode() == alice2.hashCode()));
+        log.info(alice.greet());                              // custom method
+        log.info(bob.greet());
 
-        // Custom method
-        System.out.println(alice.greet());
-        System.out.println(bob.greet());
+        log.info("alice.name()  : " + alice.name());         // accessor
+        log.info("alice.age()   : " + alice.age());          // accessor
+        log.info("alice.toString: " + alice);                 // auto toString
+        log.info("alice == alice2: " + alice.equals(alice2)); // value equality
 
         // Output:
-        // Name : Alice
-        // Age  : 30
-        // PersonRecord[name=Alice, age=30]
-        // Equal: true
-        // Same hash: true
         // Hello, my name is Alice and I am 30 years old.
         // Hello, my name is Bob and I am 25 years old.
+        // alice.name()  : Alice
+        // alice.age()   : 30
+        // alice.toString: PersonRecord[name=Alice, age=30]
+        // alice == alice2: true
     }
 }
