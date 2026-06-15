@@ -39,7 +39,7 @@ public class DatabaseInteraction {
         // Good for audit columns where the exact offset matters
         private OffsetDateTime lastModifiedAt;
 
-        // LocalDateTime would be WRONG here — no timezone, ambiguous on read-back
+        // LocalDateTime — WRONG for timestamps: no timezone, ambiguous on read
         // private LocalDateTime createdAt; // DO NOT DO THIS
 
         Order(String orderId,
@@ -62,28 +62,28 @@ public class DatabaseInteraction {
     }
 
     void main() {
-        // LocalDate — date only, no time, maps to SQL DATE
+        // LocalDate — date only, no time, no timezone
         LocalDate delivery = LocalDate.of(2024, 7, 15);
 
-        // Instant — UTC timestamp, maps to SQL TIMESTAMP WITH TIME ZONE
+        // Instant — always UTC, use for machine-generated timestamps
         Instant created = Instant.parse("2024-06-18T09:30:00Z");
 
-        // OffsetDateTime — timestamp with explicit offset, good for audit trails
+        // OffsetDateTime — UTC offset explicit, ideal for audit trails
         OffsetDateTime modified = OffsetDateTime.of(
                 2024, 6, 18, 11, 45, 0, 0, ZoneOffset.ofHours(2));
 
         Order order = new Order("ORD-001", delivery, created, modified);
 
         log.info("Persisted order: " + order);
-        log.info("deliveryDate type: LocalDate  -> SQL DATE (no time component)");
+        log.info("deliveryDate type: LocalDate  -> SQL DATE");
         log.info("createdAt type:    Instant    -> SQL TIMESTAMP WITH TIME ZONE (UTC)");
-        log.info("lastModifiedAt:    OffsetDateTime -> preserves exact UTC offset");
+        log.info("lastModifiedAt:    OffsetDateTime -> SQL TIMESTAMP WITH TIME ZONE");
 
         // Output:
         // Persisted order: Order{id=ORD-001, deliveryDate=2024-07-15,
         //   createdAt=2024-06-18T09:30:00Z, lastModifiedAt=2024-06-18T11:45+02:00}
-        // deliveryDate type: LocalDate  -> SQL DATE (no time component)
+        // deliveryDate type: LocalDate  -> SQL DATE
         // createdAt type:    Instant    -> SQL TIMESTAMP WITH TIME ZONE (UTC)
-        // lastModifiedAt:    OffsetDateTime -> preserves exact UTC offset
+        // lastModifiedAt:    OffsetDateTime -> SQL TIMESTAMP WITH TIME ZONE
     }
 }
