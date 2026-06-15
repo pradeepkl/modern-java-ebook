@@ -39,16 +39,16 @@ public class ClockAbstraction {
     void main() {
         // Production usage — real system clock, non-deterministic
         Clock productionClock = Clock.systemDefaultZone();
-        Subscription prodSub = new Subscription(
+        Subscription prod = new Subscription(
                 "C001",
                 LocalDate.of(2024, 1, 1),
                 LocalDate.of(2099, 12, 31));
-        log.info("Production active: " + prodSub.isActive(productionClock));
+        log.info("Production active: " + prod.isActive(productionClock));
 
         // Test usage — fixed clock, fully deterministic
         Clock fixedClock = Clock.fixed(
-                Instant.parse("2024-06-18T00:00:00Z"), // pinned instant
-                ZoneId.of("UTC"));
+                Instant.parse("2024-06-18T00:00:00Z"),
+                ZoneId.of("UTC")); // clock frozen at 2024-06-18
 
         Subscription sub = new Subscription(
                 "C001",
@@ -56,16 +56,21 @@ public class ClockAbstraction {
                 LocalDate.of(2024, 12, 31));
 
         boolean active = sub.isActive(fixedClock);
-        // Always true for 2024-06-18 — deterministic regardless of when test runs
-        log.info("Fixed-clock active: " + active);
+        // Always true for this fixed date — deterministic
+        log.info("Active on 2024-06-18: " + active);
 
         boolean expiresSoon = sub.expiresWithinDays(30, fixedClock);
         // Always false — Dec 31 is more than 30 days from Jun 18
         log.info("Expires within 30 days: " + expiresSoon);
 
+        boolean expiresLate = sub.expiresWithinDays(200, fixedClock);
+        // True — Dec 31 is within 200 days of Jun 18
+        log.info("Expires within 200 days: " + expiresLate);
+
         // Output:
         // Production active: true
-        // Fixed-clock active: true
+        // Active on 2024-06-18: true
         // Expires within 30 days: false
+        // Expires within 200 days: true
     }
 }
