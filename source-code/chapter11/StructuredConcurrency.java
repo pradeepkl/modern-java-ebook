@@ -1,61 +1,53 @@
-// Java 21+ (preview feature — compile with --enable-preview --source 21)
-/**
- * Listing 11.11 — StructuredConcurrency.java
- * Demonstrates: StructuredTaskScope.ShutdownOnFailure for structured concurrency
- * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 21+ with --enable-preview
- */
+// Java 25+
+// Feature shown: StructuredTaskScope structured concurrency, final in Java 25+
 package chapter11;
 
 import java.util.concurrent.StructuredTaskScope;
 import java.util.logging.Logger;
 
+/**
+ * Listing 11.11 — StructuredConcurrency.java
+ * Demonstrates: StructuredTaskScope.ShutdownOnFailure for bounded concurrent tasks
+ * Chapter 11: Declarative and Structured Concurrency
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 public class StructuredConcurrency {
 
     private static final Logger log =
             Logger.getLogger(StructuredConcurrency.class.getName());
 
-    // Domain records used in the pricing workflow
     record Order(String orderId, double total) {}
     record CustomerProfile(String tier) {}
     record PricingDecision(double finalPrice) {}
 
-    /**
-     * Fetches order and customer profile concurrently,
-     * then computes a final price based on customer tier.
-     */
+    // Both subtasks run concurrently; failure in either cancels the other
     public static PricingDecision processOrder(String orderId) throws Exception {
 
         // ShutdownOnFailure cancels all siblings if any task fails
         try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
 
-            // Fork subtask: fetch order details
             StructuredTaskScope.Subtask<Order> orderTask =
-                    scope.fork(() -> new Order(orderId, 299.99));
+                    scope.fork(() -> new Order(orderId, 299.99)); // fork order fetch
 
-            // Fork subtask: fetch customer profile concurrently
             StructuredTaskScope.Subtask<CustomerProfile> profileTask =
-                    scope.fork(() -> new CustomerProfile("GOLD"));
+                    scope.fork(() -> new CustomerProfile("GOLD")); // fork profile fetch
 
-            // Wait for all tasks to complete; throw if any failed
-            scope.join().throwIfFailed();
+            scope.join();           // wait for all tasks to complete or any to fail
+            scope.throwIfFailed();  // propagate exception if any subtask failed
 
-            // Both subtasks completed — safe to call .get()
-            Order order = orderTask.get();
+            Order order = orderTask.get();           // safe after join + throwIfFailed
             CustomerProfile profile = profileTask.get();
 
-            // Apply 10% discount for GOLD tier customers
             double discount = profile.tier().equals("GOLD") ? 0.1 : 0.0;
             return new PricingDecision(order.total() * (1 - discount));
-
-        } // Scope closes here — all tasks guaranteed complete or cancelled
+        }
+        // Scope exits here — all tasks guaranteed complete or cancelled
     }
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
         PricingDecision decision = processOrder("ORD-001");
-        // Log the computed final price after discount
         log.info("Final price: " + decision.finalPrice());
-
         // Output: INFO: Final price: 269.991
     }
 }
