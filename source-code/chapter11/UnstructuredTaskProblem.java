@@ -1,10 +1,5 @@
-// Java 8+
-/**
- * Listing 11.10 — UnstructuredTaskProblem.java
- * Demonstrates: The problem with unstructured task spawning using CompletableFuture
- * Chapter 11: Declarative and Structured Concurrency
- * Requires: Java 8+
- */
+// Java 25+
+// Feature shown: unstructured CompletableFuture task spawning with no automatic cancellation of siblings, final in Java 8+
 package chapter11;
 
 import java.util.concurrent.CompletableFuture;
@@ -13,26 +8,32 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/**
+ * Listing 11.10 — UnstructuredTaskProblem.java
+ * Demonstrates: unstructured task spawning with CompletableFuture where a
+ * failure in one branch does not automatically cancel sibling branches,
+ * leaving orphaned work and wasted resources.
+ * Chapter 11: Declarative and Structured Concurrency
+ * Requires: Java 25+ (compiled with --enable-preview --release 21 for
+ * the void main() instance main method)
+ */
 public class UnstructuredTaskProblem {
 
     private static final Logger log =
             Logger.getLogger(UnstructuredTaskProblem.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    void main() throws Exception {
 
         ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        // Task A succeeds — simulates useful background work
+        // Task A succeeds immediately
         CompletableFuture<String> taskA =
-                CompletableFuture.supplyAsync(() -> {
-                    log.info("Task A running...");
-                    return "result-A";
-                }, executor);
+                CompletableFuture.supplyAsync(() ->
+                        "result-A", executor);
 
-        // Task B fails — simulates a downstream service error
+        // Task B fails with a RuntimeException
         CompletableFuture<String> taskB =
                 CompletableFuture.supplyAsync(() -> {
-                    // This exception is thrown on a background thread
                     throw new RuntimeException("Task B failed");
                 }, executor);
 
@@ -45,17 +46,18 @@ public class UnstructuredTaskProblem {
             String b = taskB.get();   // throws ExecutionException here
             log.info("Both succeeded: " + a + ", " + b);
         } catch (Exception e) {
-            // taskA result is now orphaned — wasted work
             log.warning("One task failed: " + e.getMessage());
-            log.warning("taskA result orphaned — no automatic sibling cancellation");
+            // taskA result is now orphaned — wasted work
+            // taskA is not cancelled; its result is simply discarded
+            log.info("taskA completed but result discarded: "
+                    + taskA.isDone());
         }
 
         executor.shutdown();
         executor.awaitTermination(5, TimeUnit.SECONDS);
 
         // Output:
-        // INFO: Task A running...
         // WARNING: One task failed: java.lang.RuntimeException: Task B failed
-        // WARNING: taskA result orphaned — no automatic sibling cancellation
+        // INFO: taskA completed but result discarded: true
     }
 }
