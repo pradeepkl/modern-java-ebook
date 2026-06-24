@@ -145,7 +145,3 @@ For permissions or inquiries: [pradeep@classpath.in](mailto:pradeep@classpath.in
 - GitHub: [github.com/pradeepkl](https://github.com/pradeepkl)
 
 ---
-
-## For Maintainers
-
-This repository also contains the automated eBook production pipeline used to write and publish the book. See [PIPELINE.md](PIPELINE.md) for setup, agent commands, and KDP publishing workflow.
